@@ -36,6 +36,31 @@ const chart = createArgumentMap('#chart', mapData, {
 </script>
 ```
 
+## Load from JSON
+
+Keep map data in a separate `.json` file and fetch it at runtime:
+
+```html
+<link rel="stylesheet" href="https://unpkg.com/@parto/argument-map/dist/parto-argument-map.css" />
+<div id="chart" style="height: 480px"></div>
+<script src="https://unpkg.com/@parto/argument-map/dist/parto-argument-map.global.min.js"></script>
+<script>
+  fetch('map.json')
+    .then((r) => r.json())
+    .then((mapData) => {
+      const chart = PartoArgumentMap.createArgumentMap('#chart', mapData, {
+        theme: 'auto',
+      });
+      // optional: swap data later
+      // chart.setData(await (await fetch('other-map.json')).json());
+    });
+</script>
+```
+
+ESM bundlers work the same way — `fetch` the JSON, then pass the result to `createArgumentMap`.
+
+> **Note:** `fetch` needs a URL (local static server or hosted file). Opening HTML via `file://` will block cross-file requests in most browsers.
+
 ## Data format
 
 ```json
@@ -93,6 +118,7 @@ Open after `npm run build` (or serve with any static server):
 - `examples/01-basic-cdn` — script tag, no build step
 - `examples/02-theme-tooltip` — themes and custom tooltip
 - `examples/03-esm-rtl` — ESM import with Persian/RTL data
+- `examples/04-fetch-json` — load map data from a JSON file
 
 ## Publish
 

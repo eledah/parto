@@ -1,0 +1,36 @@
+{
+  "new_nodes": [
+    {
+      "id": "1",
+      "type": "thesis",
+      "title": "Remote work increases productivity",
+      "description": "Employees perform better with flexible schedules.",
+      "quote": "",
+      "speaker": "Moderator",
+      "relations": []
+    },
+    {
+      "id": "2",
+      "type": "claim",
+      "title": "Fewer commute hours",
+      "description": "Time saved translates to focused work blocks.",
+      "quote": "I gain two hours every day.",
+      "speaker": "Alex",
+      "score": { "intensity": 0.7, "confidence": 0.8 },
+      "relations": [
+        { "target_node_id": "1", "relation_type": "support", "reasoning": "Less fatigue, more deep work." }
+      ]
+    },
+    {
+      "id": "3",
+      "type": "claim",
+      "title": "Collaboration suffers",
+      "description": "Spontaneous brainstorming is harder online.",
+      "quote": "",
+      "speaker": "Jordan",
+      "relations": [
+        { "target_node_id": "1", "relation_type": "attack", "reasoning": "Innovation often needs in-person serendipity." }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Basic CDN — Parto Examples</title>
+    <link rel="stylesheet" href="https://unpkg.com/@eledah/parto@0.1.0/dist/parto.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #f6f3ec;
+        color: #1a2328;
+      }
+      main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      .back {
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .back a {
+        color: #2e9d61;
+        text-decoration: none;
+      }
+      .back a:hover {
+        text-decoration: underline;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin-bottom: 8px;
+      }
+      p {
+        color: #5c6b73;
+        margin-bottom: 16px;
+      }
+      #chart {
+        height: 520px;
+        border: 1px solid #d8d2c8;
+        border-radius: 12px;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="back"><a href="../../">← All examples</a></p>
+      <h1>Basic CDN demo</h1>
+      <p>Hover arcs for details. Click to zoom; click center to zoom out.</p>
+      <div id="chart"></div>
+    </main>
+    <script src="https://unpkg.com/@eledah/parto@0.1.0/dist/parto.global.min.js"></script>
+    <script>
+      const mapData = {
+        new_nodes: [
+          {
+            id: '1',
+            type: 'thesis',
+            title: 'Remote work increases productivity',
+            description: 'Employees perform better with flexible schedules.',
+            quote: '',
+            speaker: 'Moderator',
+            relations: [],
+          },
+          {
+            id: '2',
+            type: 'claim',
+            title: 'Fewer commute hours',
+            description: 'Time saved translates to focused work blocks.',
+            quote: 'I gain two hours every day.',
+            speaker: 'Alex',
+            score: { intensity: 0.7, confidence: 0.8 },
+            relations: [
+              {
+                target_node_id: '1',
+                relation_type: 'support',
+                reasoning: 'Less fatigue, more deep work.',
+              },
+            ],
+          },
+          {
+            id: '3',
+            type: 'claim',
+            title: 'Collaboration suffers',
+            description: 'Spontaneous brainstorming is harder online.',
+            quote: '',
+            speaker: 'Jordan',
+            relations: [
+              {
+                target_node_id: '1',
+                relation_type: 'attack',
+                reasoning: 'Innovation often needs in-person serendipity.',
+              },
+            ],
+          },
+        ],
+      };
+
+      Parto.createArgumentMap('#chart', mapData, {
+        theme: 'light',
+        ariaLabel: 'Remote work debate map',
+      });
+    </script>
+  </body>
+</html>

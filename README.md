@@ -168,7 +168,9 @@ npm run pack:check
 
 ## Examples
 
-Open after `npm run build` (or serve with any static server):
+**Live demos:** [eledah.github.io/parto](https://eledah.github.io/parto/)
+
+Local copies in `examples/` (run `npm run build` first, or serve with any static server):
 
 - `examples/01-basic-cdn` — script tag, no build step
 - `examples/02-theme-tooltip` — themes and custom tooltip

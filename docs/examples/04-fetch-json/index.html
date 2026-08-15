@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fetch JSON — Parto Examples</title>
+    <link rel="stylesheet" href="https://unpkg.com/@eledah/parto@0.1.0/dist/parto.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #f6f3ec;
+        color: #1a2328;
+      }
+      main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      .back {
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .back a {
+        color: #2e9d61;
+        text-decoration: none;
+      }
+      .back a:hover {
+        text-decoration: underline;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin-bottom: 8px;
+      }
+      p {
+        color: #5c6b73;
+        margin-bottom: 16px;
+      }
+      #chart {
+        height: 520px;
+        border: 1px solid #d8d2c8;
+        border-radius: 12px;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="back"><a href="../../">← All examples</a></p>
+      <h1>Load map from JSON</h1>
+      <p>Map data is fetched from <code>data/sample-map.json</code> with loading and error overlays.</p>
+      <div id="chart"></div>
+    </main>
+    <script src="https://unpkg.com/@eledah/parto@0.1.0/dist/parto.global.min.js"></script>
+    <script>
+      const chart = Parto.createArgumentMap('#chart', null, {
+        theme: 'auto',
+        ariaLabel: 'Argument map loaded from JSON',
+      });
+
+      chart.setLoading(true);
+
+      fetch('../../data/sample-map.json')
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Failed to load map (${response.status})`);
+          }
+          return response.json();
+        })
+        .then((mapData) => {
+          chart.setLoading(false);
+          chart.setData(mapData);
+        })
+        .catch((err) => {
+          chart.setLoading(false);
+          chart.showError(err.message || 'Could not load map data.');
+        });
+    </script>
+  </body>
+</html>

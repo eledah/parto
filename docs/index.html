@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Parto — Argument Map Examples</title>
+    <meta
+      name="description"
+      content="Live demos of @eledah/parto — sunburst argument maps with themes, tooltips, and zoom."
+    />
+    <style>
+      :root {
+        --bg: #f6f3ec;
+        --surface: #ffffff;
+        --text: #1a2328;
+        --muted: #5c6b73;
+        --center: #f2c94c;
+        --support: #2e9d61;
+        --attack: #d64545;
+        --border: #d8d2c8;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+      }
+      header {
+        padding: 32px 24px 16px;
+        max-width: 960px;
+        margin: 0 auto;
+      }
+      header h1 {
+        margin: 0 0 8px;
+        font-size: 1.75rem;
+      }
+      header p {
+        margin: 0 0 16px;
+        color: var(--muted);
+        max-width: 42rem;
+      }
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .links a {
+        color: var(--support);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .links a:hover {
+        text-decoration: underline;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 8px 24px 48px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 16px;
+      }
+      .card {
+        display: block;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        text-decoration: none;
+        color: inherit;
+        transition: box-shadow 0.15s ease, transform 0.15s ease;
+      }
+      .card:hover {
+        box-shadow: 0 8px 24px rgba(26, 35, 40, 0.1);
+        transform: translateY(-2px);
+      }
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 1.05rem;
+      }
+      .card p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+      .tag {
+        display: inline-block;
+        margin-top: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--center) 25%, transparent);
+        color: #7a5c00;
+      }
+      .tag--rtl {
+        background: color-mix(in srgb, var(--support) 18%, transparent);
+        color: var(--support);
+      }
+      footer {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0 24px 32px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Parto — Argument Map Examples</h1>
+      <p>
+        Interactive sunburst charts for debate arguments. Yellow center, green agree, red
+        disagree — with themes, tooltips, zoom, and mobile tap support.
+      </p>
+      <div class="links">
+        <a href="https://www.npmjs.com/package/@eledah/parto">npm</a>
+        <a href="https://github.com/eledah/parto">GitHub</a>
+        <a href="https://unpkg.com/@eledah/parto/">CDN (unpkg)</a>
+        <a href="https://eledah.github.io/parto/">Live demos</a>
+      </div>
+    </header>
+    <main>
+      <div class="grid">
+        <a class="card" href="examples/01-basic-cdn/">
+          <h2>Basic CDN</h2>
+          <p>Plain HTML with inline map data. Hover for details, click to zoom.</p>
+          <span class="tag">CDN · beginner</span>
+        </a>
+        <a class="card" href="examples/02-theme-tooltip/">
+          <h2>Themes &amp; custom tooltip</h2>
+          <p>Light/dark/system toggle, custom colors, and a custom tooltip renderer.</p>
+          <span class="tag">CDN · theming</span>
+        </a>
+        <a class="card" href="examples/03-esm-rtl/">
+          <h2>ESM + RTL (Persian)</h2>
+          <p>ES module import, Persian labels, breadcrumb navigation, and highlight controls.</p>
+          <span class="tag tag--rtl">ESM · RTL · فارسی</span>
+        </a>
+        <a class="card" href="examples/04-fetch-json/">
+          <h2>Fetch JSON</h2>
+          <p>Load map data from a file with built-in loading and error states.</p>
+          <span class="tag">CDN · fetch</span>
+        </a>
+      </div>
+    </main>
+    <footer>
+      Library: <code>@eledah/parto</code> · MIT ·
+      <a href="https://github.com/eledah/parto">source on GitHub</a>
+    </footer>
+  </body>
+</html>

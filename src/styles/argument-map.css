@@ -1,0 +1,174 @@
+/* Argument Map — scoped chart styles (pam- namespace) */
+
+.pam-chart {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  --pam-center: #f2c94c;
+  --pam-support: #2e9d61;
+  --pam-attack: #d64545;
+  --pam-border: #1a2328;
+  --pam-duration: 180ms;
+  --pam-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pam-chart--light {
+  color-scheme: light;
+  --pam-bg: #f6f3ec;
+  --pam-surface: #ffffff;
+  --pam-text: #1a2328;
+  --pam-text-muted: #5c6b73;
+  --pam-shadow: 0 8px 24px rgba(26, 35, 40, 0.12);
+}
+
+.pam-chart--dark {
+  color-scheme: dark;
+  --pam-bg: #12181c;
+  --pam-surface: #1a2328;
+  --pam-text: #e8ecef;
+  --pam-text-muted: #8a969c;
+  --pam-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --pam-border: #2d3a42;
+}
+
+.pam-chart__canvas {
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+}
+
+.pam-chart__canvas path {
+  transition:
+    opacity var(--pam-duration) var(--pam-ease),
+    filter var(--pam-duration) var(--pam-ease);
+}
+
+.pam-chart__canvas path.pam-arc--center {
+  fill: var(--pam-center);
+}
+
+.pam-chart__canvas path.pam-arc--support {
+  fill: var(--pam-support);
+}
+
+.pam-chart__canvas path.pam-arc--attack {
+  fill: var(--pam-attack);
+}
+
+.pam-chart__canvas path.pam-arc--dimmed {
+  opacity: 0.35 !important;
+  filter: none !important;
+}
+
+.pam-chart__canvas path.pam-arc--highlighted {
+  opacity: 1 !important;
+}
+
+.pam-chart__canvas path:focus-visible {
+  outline: 2px solid var(--pam-center);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pam-chart__canvas path {
+    transition: none;
+  }
+}
+
+/* Tooltip host (fixed, appended to body) */
+.pam-tooltip-host {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition:
+    opacity var(--pam-duration) var(--pam-ease),
+    transform var(--pam-duration) var(--pam-ease),
+    visibility var(--pam-duration);
+}
+
+.pam-tooltip-host--visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.pam-tooltip {
+  width: 320px;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--pam-border, #1a2328);
+  background: var(--pam-surface, #fff);
+  color: var(--pam-text, #1a2328);
+  box-shadow: var(--pam-shadow);
+}
+
+.pam-tooltip__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pam-tooltip__type {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.pam-tooltip__type--center {
+  background: color-mix(in srgb, var(--pam-center) 20%, transparent);
+  color: var(--pam-center);
+}
+
+.pam-tooltip__type--support {
+  background: color-mix(in srgb, var(--pam-support) 20%, transparent);
+  color: var(--pam-support);
+}
+
+.pam-tooltip__type--attack {
+  background: color-mix(in srgb, var(--pam-attack) 20%, transparent);
+  color: var(--pam-attack);
+}
+
+.pam-tooltip__speaker {
+  font-size: 12px;
+  color: var(--pam-text-muted);
+}
+
+.pam-tooltip__title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0 0 8px;
+}
+
+.pam-tooltip__description,
+.pam-tooltip__reasoning {
+  font-size: 13px;
+  color: var(--pam-text-muted);
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+
+.pam-tooltip__quote {
+  font-size: 13px;
+  font-style: italic;
+  margin: 0;
+  padding-inline-start: 12px;
+  border-inline-start: 3px solid var(--pam-border);
+}
+
+.pam-tooltip__scores {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--pam-text-muted);
+  margin-top: 8px;
+}

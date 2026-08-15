@@ -1,0 +1,71 @@
+{
+  "name": "@parto/argument-map",
+  "version": "0.1.0",
+  "description": "Framework-agnostic argument map sunburst charts with light/dark themes",
+  "type": "module",
+  "license": "MIT",
+  "author": "Parto",
+  "homepage": "https://github.com/eledah/parto#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eledah/parto.git"
+  },
+  "bugs": {
+    "url": "https://github.com/eledah/parto/issues"
+  },
+  "keywords": [
+    "argument-map",
+    "sunburst",
+    "d3",
+    "debate",
+    "visualization",
+    "argumentation",
+    "parto"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./styles.css": "./dist/parto-argument-map.css"
+  },
+  "unpkg": "dist/parto-argument-map.global.min.js",
+  "jsdelivr": "dist/parto-argument-map.global.min.js",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "tsc -p tsconfig.build.json && vite build && vite build --config vite.config.global.ts && vite build --config vite.config.global.min.ts",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build && npm test",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "pack:check": "npm pack --dry-run"
+  },
+  "peerDependencies": {
+    "d3": "^7.9.0"
+  },
+  "devDependencies": {
+    "@types/d3": "^7.4.3",
+    "d3": "^7.9.0",
+    "jsdom": "^26.1.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.0",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^3.2.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

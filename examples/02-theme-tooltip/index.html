@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Argument Map — Theme &amp; Custom Tooltip</title>
+    <link rel="stylesheet" href="../../dist/parto-argument-map.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+      }
+      body[data-page-theme='light'] {
+        background: #f6f3ec;
+        color: #1a2328;
+      }
+      body[data-page-theme='dark'] {
+        background: #12181c;
+        color: #e8ecef;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      button {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #8884;
+        background: transparent;
+        cursor: pointer;
+      }
+      #chart {
+        height: 520px;
+        border-radius: 12px;
+        border: 1px solid #8884;
+      }
+      .custom-tip {
+        padding: 12px;
+        border-radius: 8px;
+        background: #1a2328;
+        color: #fff;
+        font-size: 13px;
+        max-width: 280px;
+      }
+      .custom-tip strong {
+        color: #f2c94c;
+      }
+    </style>
+  </head>
+  <body data-page-theme="light">
+    <main>
+      <h1>Theme toggle &amp; custom tooltip</h1>
+      <div class="toolbar">
+        <button type="button" data-theme="light">Light</button>
+        <button type="button" data-theme="dark">Dark</button>
+        <button type="button" data-theme="auto">System</button>
+        <button type="button" id="recolor">Custom colors</button>
+      </div>
+      <div id="chart"></div>
+    </main>
+    <script src="../../dist/parto-argument-map.global.js"></script>
+    <script type="module">
+      const res = await fetch('../data/sample-map.json');
+      const mapData = await res.json();
+
+      const chart = PartoArgumentMap.createArgumentMap('#chart', mapData, {
+        theme: 'light',
+        tooltip: (node) => {
+          const el = document.createElement('div');
+          el.className = 'custom-tip';
+          el.textContent = '';
+          const strong = document.createElement('strong');
+          strong.textContent = node.title;
+          el.append(strong, document.createElement('br'), node.description || '(no description)');
+          return el;
+        },
+        onZoomChange: (path) => {
+          document.title = `Zoom: ${path.map((p) => p.title).join(' › ')}`;
+        },
+      });
+
+      document.querySelectorAll('[data-theme]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const theme = btn.getAttribute('data-theme');
+          chart.setTheme(theme);
+          if (theme === 'auto') {
+            const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.body.dataset.pageTheme = dark ? 'dark' : 'light';
+          } else {
+            document.body.dataset.pageTheme = theme;
+          }
+        });
+      });
+
+      document.getElementById('recolor').addEventListener('click', () => {
+        chart.setColors({
+          center: '#ffd54f',
+          support: '#43a047',
+          attack: '#e53935',
+        });
+      });
+    </script>
+  </body>
+</html>

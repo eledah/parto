@@ -1,5 +1,6 @@
 import { DEFAULT_LABELS } from '../config.js';
 import type { ArgumentMapLabels, TooltipRenderer, TreeNode } from '../types.js';
+import { clampTooltipPosition } from './tooltipPosition.js';
 
 function typeLabel(
   node: TreeNode,
@@ -73,21 +74,21 @@ export function createDefaultTooltip(
   return card;
 }
 
-function clampPosition(position: { x: number; y: number }, card: HTMLElement) {
-  const rect = card.getBoundingClientRect();
-  const cardWidth = rect.width || 320;
-  const cardHeight = rect.height || 200;
-  let posX = position.x + 20;
-  let posY = position.y + 20;
-  if (posX + cardWidth > window.innerWidth) posX = position.x - cardWidth - 20;
-  if (posY + cardHeight > window.innerHeight) posY = position.y - cardHeight - 20;
-  return { posX, posY };
+type TooltipEvent = MouseEvent | FocusEvent | PointerEvent;
+
+function readPointer(event: TooltipEvent): { x: number; y: number; pointerType?: string } {
+  if ('clientX' in event && typeof event.clientX === 'number') {
+    const pointerType = 'pointerType' in event ? event.pointerType : undefined;
+    return { x: event.clientX, y: event.clientY, pointerType };
+  }
+  return { x: 0, y: 0 };
 }
 
 export class TooltipController {
   private element: HTMLDivElement;
   private rafId: number | null = null;
   private position = { x: 0, y: 0 };
+  private pointerType: string | undefined;
   private renderer: TooltipRenderer;
   private labels: ArgumentMapLabels;
   private visible = false;
@@ -108,26 +109,29 @@ export class TooltipController {
     parent.appendChild(this.element);
   }
 
-  show(node: TreeNode, event: MouseEvent | FocusEvent): void {
-    this.position = {
-      x: 'clientX' in event ? event.clientX : 0,
-      y: 'clientY' in event ? event.clientY : 0,
-    };
+  show(node: TreeNode, event: TooltipEvent): void {
+    const pointer = readPointer(event);
+    this.position = { x: pointer.x, y: pointer.y };
+    this.pointerType = pointer.pointerType;
     this.element.replaceChildren(this.renderer(node, this.labels));
+    this.element.classList.toggle('pam-tooltip-host--touch', pointer.pointerType === 'touch');
     this.element.classList.add('pam-tooltip-host--visible');
     this.visible = true;
     this.schedulePosition();
   }
 
-  move(event: MouseEvent): void {
+  move(event: PointerEvent): void {
     if (!this.visible) return;
     this.position = { x: event.clientX, y: event.clientY };
+    this.pointerType = event.pointerType;
+    this.element.classList.toggle('pam-tooltip-host--touch', event.pointerType === 'touch');
     this.schedulePosition();
   }
 
   hide(): void {
     this.visible = false;
-    this.element.classList.remove('pam-tooltip-host--visible');
+    this.pointerType = undefined;
+    this.element.classList.remove('pam-tooltip-host--visible', 'pam-tooltip-host--touch');
     this.element.replaceChildren();
     if (this.rafId != null) {
       cancelAnimationFrame(this.rafId);
@@ -149,9 +153,9 @@ export class TooltipController {
     this.rafId = requestAnimationFrame(() => {
       const tooltip = this.element.firstElementChild as HTMLElement | null;
       if (!tooltip) return;
-      const { posX, posY } = clampPosition(this.position, tooltip);
-      this.element.style.left = `${posX}px`;
-      this.element.style.top = `${posY}px`;
+      const { x, y } = clampTooltipPosition(this.position, tooltip, this.pointerType);
+      this.element.style.left = `${x}px`;
+      this.element.style.top = `${y}px`;
     });
   }
 }

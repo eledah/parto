@@ -256,7 +256,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
     this.options.onZoomChange?.(this.zoom.getZoomPath());
   }
 
-  private handleHover(node: TreeNode, event: MouseEvent | FocusEvent): void {
+  private handleHover(node: TreeNode, event: MouseEvent | FocusEvent | PointerEvent): void {
     this.tooltip?.show(node, event);
     this.options.onNodeHover?.(node, event);
   }

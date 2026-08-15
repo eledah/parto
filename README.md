@@ -66,6 +66,13 @@ Keep map data in a separate `.json` file and fetch it at runtime:
 
 The chart shows built-in **loading**, **empty**, and **error** overlays — no need to build your own status UI.
 
+### Mobile / touch
+
+- Tooltips use **pointer events** (not hover-only mouse events).
+- **First tap** on an arc shows the tooltip above your finger.
+- **Second tap** on the same arc zooms in (when zoom is enabled).
+- Tap outside the chart to dismiss the tooltip.
+
 > **Note:** `fetch` needs a URL (local static server or hosted file). Opening HTML via `file://` will block cross-file requests in most browsers.
 
 ## Validate map JSON

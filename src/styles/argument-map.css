@@ -39,9 +39,14 @@
 }
 
 .pam-chart__canvas path {
+  touch-action: manipulation;
   transition:
     opacity var(--pam-duration) var(--pam-ease),
     filter var(--pam-duration) var(--pam-ease);
+}
+
+.pam-chart__canvas svg {
+  touch-action: manipulation;
 }
 
 .pam-chart__canvas path.pam-arc--center {
@@ -80,7 +85,7 @@
 .pam-tooltip-host {
   position: fixed;
   z-index: 10000;
-  pointer-events: none;
+  pointer-events: none; /* do not steal taps from the chart */
   opacity: 0;
   visibility: hidden;
   transform: translateY(4px);

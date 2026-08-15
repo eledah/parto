@@ -80,7 +80,7 @@ export interface ArgumentMapOptions {
   lang?: string;
   labels?: Partial<ArgumentMapLabels>;
   ariaLabel?: string;
-  onNodeHover?: (node: TreeNode, event: MouseEvent | FocusEvent) => void;
+  onNodeHover?: (node: TreeNode, event: MouseEvent | FocusEvent | PointerEvent) => void;
   onNodeLeave?: () => void;
   onNodeClick?: (node: TreeNode, depth: number, hasChildren: boolean) => void;
   onZoomChange?: (path: NodeContext[]) => void;

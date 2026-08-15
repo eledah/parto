@@ -1,6 +1,6 @@
 {
   "name": "@parto/argument-map",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Framework-agnostic argument map sunburst charts with light/dark themes",
   "type": "module",
   "license": "MIT",

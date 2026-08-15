@@ -5,11 +5,12 @@ import { getNodeArcClass, getNodeColor } from '../core/buildTree.js';
 import type { TreeNode } from '../types.js';
 
 type D3Node = HierarchyRectangularNode<TreeNode>;
+type InteractionEvent = PointerEvent | FocusEvent;
 
 export interface SunburstRendererOptions {
   ariaLabel: string;
   zoomEnabled: boolean;
-  onHover?: (node: TreeNode, event: MouseEvent | FocusEvent) => void;
+  onHover?: (node: TreeNode, event: InteractionEvent) => void;
   onLeave?: () => void;
   onClick?: (node: TreeNode, depth: number, hasChildren: boolean) => void;
 }
@@ -29,6 +30,9 @@ export class SunburstRenderer {
   private resizeObserver: ResizeObserver | null = null;
   private options: SunburstRendererOptions;
   private tooltipId: string;
+  /** First touch tap shows tooltip; second tap on same arc triggers zoom. */
+  private touchZoomPathKey: string | null = null;
+  private touchOutsideHandler: ((event: PointerEvent) => void) | null = null;
 
   constructor(container: HTMLElement, options: SunburstRendererOptions) {
     this.container = container;
@@ -68,6 +72,7 @@ export class SunburstRenderer {
   }
 
   destroy(): void {
+    this.unbindTouchOutsideDismiss();
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
@@ -99,6 +104,9 @@ export class SunburstRenderer {
   }
 
   render(rootNode: TreeNode): void {
+    this.touchZoomPathKey = null;
+    this.unbindTouchOutsideDismiss();
+
     this.currentRoot = rootNode;
     syncColorsFromCss(this.container);
     const colors = chartConfig.colors;
@@ -109,7 +117,6 @@ export class SunburstRenderer {
       maxDepth = Math.max(maxDepth, d.depth);
     });
 
-    // Guard root-only maps (maxDepth === 0)
     const safeMaxDepth = Math.max(maxDepth, 1);
 
     this.partition(hierarchyRoot as D3Node);
@@ -182,7 +189,7 @@ export class SunburstRenderer {
       .classed('pam-arc--highlighted', (d) => this.highlightId === d.data.id)
       .classed('pam-arc--dimmed', (d) => this.highlightId != null && this.highlightId !== d.data.id);
 
-    const showHover = (event: MouseEvent | FocusEvent, d: D3Node) => {
+    const showHover = (event: InteractionEvent, d: D3Node) => {
       paths.classed('pam-arc--dimmed', (n) => n.data.id !== d.data.id);
       paths.classed('pam-arc--highlighted', (n) => n.data.id === d.data.id);
       try {
@@ -205,17 +212,45 @@ export class SunburstRenderer {
       this.options.onLeave?.();
     };
 
+    const handlePointerClick = (event: PointerEvent, d: D3Node) => {
+      event.stopPropagation();
+
+      if (event.pointerType === 'touch') {
+        if (this.touchZoomPathKey === d.data.pathKey) {
+          this.touchZoomPathKey = null;
+          this.unbindTouchOutsideDismiss();
+          if (this.options.zoomEnabled) {
+            this.options.onClick?.(d.data, d.depth, (d.data.children?.length ?? 0) > 0);
+          }
+        } else {
+          this.touchZoomPathKey = d.data.pathKey;
+          showHover(event, d);
+          this.bindTouchOutsideDismiss(clearHover);
+        }
+        return;
+      }
+
+      if (this.options.zoomEnabled) {
+        this.options.onClick?.(d.data, d.depth, (d.data.children?.length ?? 0) > 0);
+      }
+    };
+
     paths
-      .on('mouseover', (event: MouseEvent, d) => showHover(event, d))
-      .on('mouseout', () => clearHover())
+      .on('pointerenter', (event: PointerEvent, d) => {
+        if (event.pointerType === 'touch') return;
+        showHover(event, d);
+      })
+      .on('pointermove', (event: PointerEvent, d) => {
+        if (event.pointerType === 'touch') return;
+        showHover(event, d);
+      })
+      .on('pointerleave', (event: PointerEvent) => {
+        if (event.pointerType === 'touch') return;
+        clearHover();
+      })
       .on('focus', (event: FocusEvent, d) => showHover(event, d))
       .on('blur', () => clearHover())
-      .on('click', (event, d) => {
-        event.stopPropagation();
-        if (this.options.zoomEnabled) {
-          this.options.onClick?.(d.data, d.depth, (d.data.children?.length ?? 0) > 0);
-        }
-      })
+      .on('click', (event: PointerEvent, d) => handlePointerClick(event, d))
       .on('keydown', (event, d) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
@@ -228,5 +263,28 @@ export class SunburstRenderer {
 
   getTooltipElementId(): string {
     return this.tooltipId;
+  }
+
+  private bindTouchOutsideDismiss(onDismiss: () => void): void {
+    this.unbindTouchOutsideDismiss();
+    this.touchOutsideHandler = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (target && this.container.contains(target)) return;
+      this.touchZoomPathKey = null;
+      onDismiss();
+      this.unbindTouchOutsideDismiss();
+    };
+    window.setTimeout(() => {
+      if (this.touchOutsideHandler) {
+        document.addEventListener('pointerdown', this.touchOutsideHandler, true);
+      }
+    }, 0);
+  }
+
+  private unbindTouchOutsideDismiss(): void {
+    if (this.touchOutsideHandler) {
+      document.removeEventListener('pointerdown', this.touchOutsideHandler, true);
+      this.touchOutsideHandler = null;
+    }
   }
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- Mobile tooltips: pointer events, tap-to-show (sticky), tap-again-to-zoom
+- Touch placement: tooltip appears above the finger with a fixed offset
+- `pointer-events: none` on tooltip host so taps reach the chart
+
 ## 0.1.1
 
 - Built-in loading, empty, and error overlays on the chart

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/eledah/parto/main/schema/argument-map.schema.json",
+  "title": "Parto Argument Map",
+  "description": "Flat node list for @parto/argument-map sunburst charts.",
+  "type": "object",
+  "required": ["new_nodes"],
+  "additionalProperties": false,
+  "properties": {
+    "new_nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/node" }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["id", "type", "title", "description", "quote", "speaker", "relations"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "quote": { "type": "string" },
+        "speaker": { "type": "string" },
+        "relations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/relation" }
+        },
+        "score": { "$ref": "#/$defs/score" }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "required": ["target_node_id", "relation_type", "reasoning"],
+      "additionalProperties": false,
+      "properties": {
+        "target_node_id": { "type": "string", "minLength": 1 },
+        "relation_type": { "type": "string", "enum": ["support", "attack"] },
+        "reasoning": { "type": "string" }
+      }
+    },
+    "score": {
+      "type": "object",
+      "required": ["intensity", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "intensity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

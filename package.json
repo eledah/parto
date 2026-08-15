@@ -1,6 +1,6 @@
 {
   "name": "@parto/argument-map",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Framework-agnostic argument map sunburst charts with light/dark themes",
   "type": "module",
   "license": "MIT",
@@ -24,6 +24,8 @@
   ],
   "files": [
     "dist",
+    "schema",
+    "bin",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
@@ -36,7 +38,11 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./styles.css": "./dist/parto-argument-map.css"
+    "./styles.css": "./dist/parto-argument-map.css",
+    "./schema.json": "./schema/argument-map.schema.json"
+  },
+  "bin": {
+    "parto-validate-map": "./bin/validate-map.mjs"
   },
   "unpkg": "dist/parto-argument-map.global.min.js",
   "jsdelivr": "dist/parto-argument-map.global.min.js",

@@ -31,49 +31,37 @@
         border-radius: 12px;
         background: #fff;
       }
-      #status {
-        font-size: 14px;
-        color: #5c6b73;
-        margin-bottom: 12px;
-      }
-      #status.is-error {
-        color: #d64545;
-      }
     </style>
   </head>
   <body>
     <main>
       <h1>Argument Map — load from JSON</h1>
       <p>Map data is fetched from <code>examples/data/sample-map.json</code>.</p>
-      <p id="status">Loading map…</p>
       <div id="chart"></div>
     </main>
     <script src="../../dist/parto-argument-map.global.min.js"></script>
     <script>
-      const status = document.getElementById('status');
-      const chartEl = document.getElementById('chart');
+      const chart = PartoArgumentMap.createArgumentMap('#chart', null, {
+        theme: 'auto',
+        ariaLabel: 'Argument map loaded from JSON',
+      });
 
-      async function loadMap(url) {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Failed to load map (${response.status})`);
-        }
-        return response.json();
-      }
+      chart.setLoading(true);
 
-      loadMap('../data/sample-map.json')
+      fetch('../data/sample-map.json')
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Failed to load map (${response.status})`);
+          }
+          return response.json();
+        })
         .then((mapData) => {
-          status.textContent = 'Map loaded.';
-          PartoArgumentMap.createArgumentMap(chartEl, mapData, {
-            theme: 'auto',
-            ariaLabel: 'Argument map loaded from JSON',
-          });
+          chart.setLoading(false);
+          chart.setData(mapData);
         })
         .catch((err) => {
-          status.textContent = err.message || 'Could not load map data.';
-          status.classList.add('is-error');
-          chartEl.innerHTML =
-            '<p style="padding:24px;color:#5c6b73">Serve this folder with a static server (file:// blocks fetch).</p>';
+          chart.setLoading(false);
+          chart.showError(err.message || 'Could not load map data.');
         });
     </script>
   </body>

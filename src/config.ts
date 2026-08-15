@@ -8,6 +8,9 @@ export const DEFAULT_LABELS: ArgumentMapLabels = {
   unknownSpeaker: 'Unknown',
   intensity: 'Intensity',
   confidence: 'Confidence',
+  statusLoading: 'Loading map…',
+  statusEmpty: 'No map data yet.',
+  statusError: 'Could not load this argument map.',
 };
 
 export const DEFAULT_COLORS: ArgumentMapColors = {

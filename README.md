@@ -45,21 +45,65 @@ Keep map data in a separate `.json` file and fetch it at runtime:
 <div id="chart" style="height: 480px"></div>
 <script src="https://unpkg.com/@parto/argument-map/dist/parto-argument-map.global.min.js"></script>
 <script>
+  const chart = PartoArgumentMap.createArgumentMap('#chart', null, { theme: 'auto' });
+  chart.setLoading(true);
+
   fetch('map.json')
-    .then((r) => r.json())
+    .then((r) => {
+      if (!r.ok) throw new Error('Failed to load map');
+      return r.json();
+    })
     .then((mapData) => {
-      const chart = PartoArgumentMap.createArgumentMap('#chart', mapData, {
-        theme: 'auto',
-      });
-      // optional: swap data later
-      // chart.setData(await (await fetch('other-map.json')).json());
+      chart.setLoading(false);
+      chart.setData(mapData);
+    })
+    .catch((err) => {
+      chart.setLoading(false);
+      chart.showError(err.message);
     });
 </script>
 ```
 
-ESM bundlers work the same way — `fetch` the JSON, then pass the result to `createArgumentMap`.
+The chart shows built-in **loading**, **empty**, and **error** overlays — no need to build your own status UI.
 
 > **Note:** `fetch` needs a URL (local static server or hosted file). Opening HTML via `file://` will block cross-file requests in most browsers.
+
+## Validate map JSON
+
+### CLI (after install)
+
+```bash
+npx parto-validate-map my-map.json
+# or multiple files
+npx parto-validate-map maps/*.json
+```
+
+### Programmatic
+
+```js
+import { validateMapData, ValidationError } from '@parto/argument-map';
+
+try {
+  const { data, warnings } = validateMapData(json);
+  warnings.forEach(console.warn);
+} catch (err) {
+  if (err instanceof ValidationError) {
+    console.error(err.issues);
+  }
+}
+```
+
+### JSON Schema
+
+A draft 2020-12 schema ships with the package:
+
+```json
+{
+  "$ref": "https://unpkg.com/@parto/argument-map/schema/argument-map.schema.json"
+}
+```
+
+Or import from npm: `@parto/argument-map/schema.json`
 
 ## Data format
 
@@ -95,6 +139,8 @@ ESM bundlers work the same way — `fetch` the JSON, then pass the result to `cr
 `createArgumentMap(container, data, options?)` returns:
 
 - `setData(data)` — replace map data
+- `setLoading(true | false)` — show/hide loading overlay
+- `showError(message?)` — show error overlay (e.g. failed fetch)
 - `setTheme('light' | 'dark' | 'auto')`
 - `setColors({ center, support, attack, border })`
 - `highlight(nodeId | null)`

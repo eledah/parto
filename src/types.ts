@@ -45,6 +45,9 @@ export interface ArgumentMapLabels {
   unknownSpeaker: string;
   intensity: string;
   confidence: string;
+  statusLoading: string;
+  statusEmpty: string;
+  statusError: string;
 }
 
 export interface NodeContext {
@@ -86,6 +89,8 @@ export interface ArgumentMapOptions {
 
 export interface ArgumentMapChart {
   setData(data: ArgumentMapData): void;
+  setLoading(loading: boolean): void;
+  showError(message?: string): void;
   setTheme(theme: ThemeMode): void;
   setColors(colors: Partial<ArgumentMapColors>): void;
   highlight(nodeId: string | null): void;

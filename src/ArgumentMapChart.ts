@@ -10,6 +10,8 @@ import { validateMapData } from './core/validateMapData.js';
 import { ZoomController } from './core/ZoomController.js';
 import { SunburstRenderer } from './render/SunburstRenderer.js';
 import { createDefaultTooltip, TooltipController } from './ui/TooltipController.js';
+import { ChartStatusOverlay } from './ui/ChartStatus.js';
+import { ValidationError } from './errors.js';
 import type {
   ArgumentMapChart,
   ArgumentMapColors,
@@ -54,10 +56,11 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
   private themeMedia: MediaQueryList | null = null;
   private themeListener: ((e: MediaQueryListEvent) => void) | null = null;
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
+  private status: ChartStatusOverlay;
 
   constructor(
     target: string | HTMLElement,
-    data: ArgumentMapData,
+    data?: ArgumentMapData | null,
     options: ArgumentMapOptions = {},
   ) {
     this.container = resolveContainer(target);
@@ -90,6 +93,12 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
       applyColorOverrides(this.container, options.colors);
     }
 
+    this.status = new ChartStatusOverlay(this.container, {
+      loading: this.options.labels.statusLoading,
+      empty: this.options.labels.statusEmpty,
+      error: this.options.labels.statusError,
+    });
+
     this.renderer = new SunburstRenderer(this.container, {
       ariaLabel: this.options.ariaLabel,
       zoomEnabled: this.options.zoom,
@@ -113,24 +122,57 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
 
     this.applyTheme(this.options.theme);
     this.bindKeyboard();
-    this.setData(data);
+
+    if (data) {
+      this.setData(data);
+    } else {
+      this.status.show('empty');
+    }
   }
 
   setData(data: ArgumentMapData): void {
-    const { data: validated, warnings } = validateMapData(data);
-    for (const w of warnings) this.options.onWarning?.(w);
+    try {
+      const { data: validated, warnings } = validateMapData(data);
+      for (const w of warnings) this.options.onWarning?.(w);
 
-    const { tree, warnings: treeWarnings } = buildTree(validated.new_nodes);
-    for (const w of treeWarnings) this.options.onWarning?.(w);
+      const { tree, warnings: treeWarnings } = buildTree(validated.new_nodes);
+      for (const w of treeWarnings) this.options.onWarning?.(w);
 
-    if (!tree) {
-      this.options.onWarning?.('Could not build tree from map data');
-      return;
+      if (!tree) {
+        this.options.onWarning?.('Could not build tree from map data');
+        this.status.show('error', this.options.labels.statusError);
+        return;
+      }
+
+      this.status.hide();
+      this.zoom.setTree(tree);
+      this.render();
+      this.emitZoomChange();
+    } catch (err) {
+      const message =
+        err instanceof ValidationError
+          ? err.issues.join('; ')
+          : err instanceof Error
+            ? err.message
+            : this.options.labels.statusError;
+      this.options.onWarning?.(message);
+      this.status.show('error', message);
     }
+  }
 
-    this.zoom.setTree(tree);
-    this.render();
-    this.emitZoomChange();
+  setLoading(loading: boolean): void {
+    if (loading) {
+      this.status.show('loading');
+      this.tooltip?.hide();
+    } else if (this.status.getState() === 'loading') {
+      this.status.hide();
+    }
+  }
+
+  showError(message?: string): void {
+    this.options.onWarning?.(message ?? this.options.labels.statusError);
+    this.status.show('error', message);
+    this.tooltip?.hide();
   }
 
   setTheme(theme: ThemeMode): void {
@@ -197,6 +239,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
       document.removeEventListener('keydown', this.keydownHandler);
     }
     this.tooltip?.destroy();
+    this.status.destroy();
     this.renderer.destroy();
     this.container.classList.remove('pam-chart', 'pam-chart--light', 'pam-chart--dark');
     if (this.options.direction !== 'inherit') {
@@ -280,7 +323,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
 
 export function createArgumentMap(
   target: string | HTMLElement,
-  data: ArgumentMapData,
+  data?: ArgumentMapData | null,
   options?: ArgumentMapOptions,
 ): ArgumentMapChart {
   return new ArgumentMapChartImpl(target, data, options);

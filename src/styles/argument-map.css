@@ -172,3 +172,60 @@
   color: var(--pam-text-muted);
   margin-top: 8px;
 }
+
+/* Chart status overlay (loading / empty / error) */
+.pam-chart__status {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  background: color-mix(in srgb, var(--pam-surface, #fff) 92%, transparent);
+  color: var(--pam-text-muted, #5c6b73);
+}
+
+.pam-chart__status[hidden] {
+  display: none !important;
+}
+
+.pam-chart__status-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 28rem;
+}
+
+.pam-chart__status--error {
+  color: var(--pam-attack, #d64545);
+}
+
+.pam-chart__status--error .pam-chart__status-text {
+  color: var(--pam-attack, #d64545);
+}
+
+.pam-chart__status-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid color-mix(in srgb, var(--pam-text-muted, #5c6b73) 25%, transparent);
+  border-top-color: var(--pam-center, #f2c94c);
+  border-radius: 50%;
+  animation: pam-spin 0.8s linear infinite;
+}
+
+@keyframes pam-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pam-chart__status-spinner {
+    animation: none;
+    border-top-color: var(--pam-text-muted, #5c6b73);
+  }
+}

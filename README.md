@@ -168,7 +168,7 @@ npm run pack:check
 
 ## Examples
 
-**Live demos:** [eledah.github.io/parto](https://eledah.github.io/parto/)
+**Live demos:** [eledah.ir/parto](https://eledah.ir/parto/) (GitHub Pages)
 
 Local copies in `examples/` (run `npm run build` first, or serve with any static server):
 

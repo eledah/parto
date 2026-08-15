@@ -1,5 +1,7 @@
 # Parto — argument map charts
 
+[![npm version](https://img.shields.io/npm/v/@eledah/parto.svg)](https://www.npmjs.com/package/@eledah/parto)
+
 **Parto** (پرتو) is a framework-agnostic JavaScript library for visualizing debate argument structures as interactive sunburst charts.
 
 - Yellow center (thesis), green agree (support), red disagree (attack)

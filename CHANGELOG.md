@@ -1,6 +1,13 @@
 # Changelog
 
-## 0.1.2
+## 0.1.0
+
+- Publish as `@eledah/parto` (npm package rename)
+- Mobile tooltips, status overlays, JSON Schema, validation CLI, CI
+- ESM and browser global (`Parto`) builds
+- Yellow center, green support, red attack semantic colors
+
+## 0.1.2 (unpublished `@parto/argument-map`)
 
 - Mobile tooltips: pointer events, tap-to-show (sticky), tap-again-to-zoom
 - Touch placement: tooltip appears above the finger with a fixed offset

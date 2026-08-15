@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Argument Map — Fetch JSON</title>
-    <link rel="stylesheet" href="../../dist/parto-argument-map.css" />
+    <link rel="stylesheet" href="../../dist/parto.css" />
     <style>
       body {
         margin: 0;
@@ -39,9 +39,9 @@
       <p>Map data is fetched from <code>examples/data/sample-map.json</code>.</p>
       <div id="chart"></div>
     </main>
-    <script src="../../dist/parto-argument-map.global.min.js"></script>
+    <script src="../../dist/parto.global.min.js"></script>
     <script>
-      const chart = PartoArgumentMap.createArgumentMap('#chart', null, {
+      const chart = Parto.createArgumentMap('#chart', null, {
         theme: 'auto',
         ariaLabel: 'Argument map loaded from JSON',
       });

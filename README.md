@@ -10,14 +10,14 @@
 ## Install
 
 ```bash
-npm install @parto/argument-map
+npm install @eledah/parto
 ```
 
 ## Quick start
 
 ```js
-import { createArgumentMap } from '@parto/argument-map';
-import '@parto/argument-map/styles.css';
+import { createArgumentMap } from '@eledah/parto';
+import '@eledah/parto/styles.css';
 
 const chart = createArgumentMap('#chart', mapData, {
   theme: 'auto',
@@ -29,10 +29,10 @@ const chart = createArgumentMap('#chart', mapData, {
 ## CDN
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/@parto/argument-map/dist/parto-argument-map.css" />
-<script src="https://unpkg.com/@parto/argument-map/dist/parto-argument-map.global.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@eledah/parto/dist/parto.css" />
+<script src="https://unpkg.com/@eledah/parto/dist/parto.global.min.js"></script>
 <script>
-  PartoArgumentMap.createArgumentMap('#chart', mapData);
+  Parto.createArgumentMap('#chart', mapData);
 </script>
 ```
 
@@ -41,11 +41,11 @@ const chart = createArgumentMap('#chart', mapData, {
 Keep map data in a separate `.json` file and fetch it at runtime:
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/@parto/argument-map/dist/parto-argument-map.css" />
+<link rel="stylesheet" href="https://unpkg.com/@eledah/parto/dist/parto.css" />
 <div id="chart" style="height: 480px"></div>
-<script src="https://unpkg.com/@parto/argument-map/dist/parto-argument-map.global.min.js"></script>
+<script src="https://unpkg.com/@eledah/parto/dist/parto.global.min.js"></script>
 <script>
-  const chart = PartoArgumentMap.createArgumentMap('#chart', null, { theme: 'auto' });
+  const chart = Parto.createArgumentMap('#chart', null, { theme: 'auto' });
   chart.setLoading(true);
 
   fetch('map.json')
@@ -88,7 +88,7 @@ npx parto-validate-map maps/*.json
 ### Programmatic
 
 ```js
-import { validateMapData, ValidationError } from '@parto/argument-map';
+import { validateMapData, ValidationError } from '@eledah/parto';
 
 try {
   const { data, warnings } = validateMapData(json);
@@ -106,11 +106,11 @@ A draft 2020-12 schema ships with the package:
 
 ```json
 {
-  "$ref": "https://unpkg.com/@parto/argument-map/schema/argument-map.schema.json"
+  "$ref": "https://unpkg.com/@eledah/parto/schema/argument-map.schema.json"
 }
 ```
 
-Or import from npm: `@parto/argument-map/schema.json`
+Or import from npm: `@eledah/parto/schema.json`
 
 ## Data format
 

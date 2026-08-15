@@ -2,14 +2,14 @@ import { createArgumentMap } from './index.js';
 
 declare global {
   interface Window {
-    PartoArgumentMap: {
+    Parto: {
       createArgumentMap: typeof createArgumentMap;
     };
   }
 }
 
 if (typeof window !== 'undefined') {
-  window.PartoArgumentMap = { createArgumentMap };
+  window.Parto = { createArgumentMap };
 }
 
 export { createArgumentMap };

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/eledah/parto/main/schema/argument-map.schema.json",
   "title": "Parto Argument Map",
-  "description": "Flat node list for @parto/argument-map sunburst charts.",
+  "description": "Flat node list for @eledah/parto sunburst charts.",
   "type": "object",
   "required": ["new_nodes"],
   "additionalProperties": false,

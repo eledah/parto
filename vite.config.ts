@@ -25,7 +25,7 @@ export default defineConfig({
     rollupOptions: {
       external: ['d3'],
       output: {
-        assetFileNames: 'parto-argument-map[extname]',
+        assetFileNames: 'parto[extname]',
       },
     },
     cssCodeSplit: false,

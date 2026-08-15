@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Argument Map — Basic CDN</title>
-    <link rel="stylesheet" href="../../dist/parto-argument-map.css" />
+    <link rel="stylesheet" href="../../dist/parto.css" />
     <style>
       body {
         margin: 0;
@@ -39,7 +39,7 @@
       <p>Hover arcs for details. Click to zoom; click center to zoom out.</p>
       <div id="chart"></div>
     </main>
-    <script src="../../dist/parto-argument-map.global.min.js"></script>
+    <script src="../../dist/parto.global.min.js"></script>
     <script>
       const mapData = {
         new_nodes: [
@@ -86,7 +86,7 @@
         ],
       };
 
-      PartoArgumentMap.createArgumentMap('#chart', mapData, {
+      Parto.createArgumentMap('#chart', mapData, {
         theme: 'light',
         ariaLabel: 'Remote work debate map',
       });

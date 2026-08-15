@@ -11,8 +11,8 @@ export default defineConfig({
     lib: {
       entry: resolve(rootDir, 'src/global.ts'),
       formats: ['iife'],
-      name: 'PartoArgumentMap',
-      fileName: () => 'parto-argument-map.global.min.js',
+      name: 'Parto',
+      fileName: () => 'parto.global.min.js',
     },
     minify: 'esbuild',
   },

@@ -1,14 +1,16 @@
 import * as d3 from 'd3';
 import type { HierarchyRectangularNode } from 'd3-hierarchy';
-import { chartConfig, syncColorsFromCss } from '../config.js';
+import { chartConfig, DEFAULT_LABELS, syncColorsFromCss } from '../config.js';
 import { getNodeArcClass, getNodeColor } from '../core/buildTree.js';
-import type { TreeNode } from '../types.js';
+import type { ArgumentMapLabels, TreeNode } from '../types.js';
 
 type D3Node = HierarchyRectangularNode<TreeNode>;
 type InteractionEvent = PointerEvent | FocusEvent;
 
 export interface SunburstRendererOptions {
   ariaLabel: string;
+  legend?: boolean;
+  labels?: ArgumentMapLabels;
   zoomEnabled: boolean;
   onHover?: (node: TreeNode, event: InteractionEvent) => void;
   onLeave?: () => void;
@@ -25,6 +27,7 @@ export class SunburstRenderer {
   private g: d3.Selection<SVGGElement, unknown, null, undefined>;
   private partition = d3.partition<TreeNode>();
   private arc: d3.Arc<unknown, D3Node>;
+  private legend: HTMLElement | null = null;
   private currentRoot: TreeNode | null = null;
   private highlightId: string | null = null;
   private resizeObserver: ResizeObserver | null = null;
@@ -55,6 +58,10 @@ export class SunburstRenderer {
       .attr('aria-label', options.ariaLabel);
 
     this.g = this.svg.append('g');
+    if (options.legend ?? true) {
+      this.legend = this.createLegend(options.labels ?? DEFAULT_LABELS);
+      this.chartRoot.appendChild(this.legend);
+    }
 
     this.partition = d3.partition<TreeNode>().size([2 * Math.PI, this.radius]);
 
@@ -81,16 +88,19 @@ export class SunburstRenderer {
   }
 
   resize(): void {
-    const rect = this.container.getBoundingClientRect();
+    const rect = this.chartRoot.getBoundingClientRect();
     this.width = rect.width;
     this.height = rect.height;
-    this.radius = Math.min(this.width, this.height) / 2 - chartConfig.chart.radiusPadding;
+    const measuredLegendHeight = this.legend?.getBoundingClientRect().height ?? 0;
+    const legendInset = this.legend ? Math.max(56, measuredLegendHeight + 28) : 0;
+    const plotHeight = Math.max(0, this.height - legendInset);
+    this.radius = Math.min(this.width, plotHeight) / 2 - chartConfig.chart.radiusPadding;
 
     if (this.radius < chartConfig.chart.minRadius) return;
 
     this.partition.size([2 * Math.PI, this.radius]);
     this.svg.attr('viewBox', `0 0 ${this.width} ${this.height}`);
-    this.g.attr('transform', `translate(${this.width / 2}, ${this.height / 2})`);
+    this.g.attr('transform', `translate(${this.width / 2}, ${plotHeight / 2})`);
 
     if (this.currentRoot) this.render(this.currentRoot);
   }
@@ -194,9 +204,13 @@ export class SunburstRenderer {
       paths.classed('pam-arc--highlighted', (n) => n.data.id === d.data.id);
       try {
         const nodeColor = getNodeColor(d.data, rootNode, colors);
+        const shadowColor = d3.color(nodeColor);
+        if (shadowColor) shadowColor.opacity = 0.28;
         d3.select(event.currentTarget as Element).style(
           'filter',
-          `brightness(${d.depth === 0 ? 1.05 : 1.2}) drop-shadow(0 0 10px ${nodeColor})`,
+          `brightness(${d.depth === 0 ? 1.02 : 1.06}) drop-shadow(0 2px 5px ${
+            shadowColor?.formatRgb() ?? nodeColor
+          })`,
         );
       } catch {
         /* ignore filter errors */
@@ -263,6 +277,36 @@ export class SunburstRenderer {
 
   getTooltipElementId(): string {
     return this.tooltipId;
+  }
+
+  private createLegend(labels: ArgumentMapLabels): HTMLElement {
+    const legend = document.createElement('div');
+    legend.className = 'pam-chart__legend';
+    legend.setAttribute('role', 'list');
+    legend.setAttribute('aria-label', labels.legend ?? 'Argument types');
+
+    const items = [
+      { type: 'center', label: labels.center },
+      { type: 'support', label: labels.support },
+      { type: 'attack', label: labels.attack },
+    ] as const;
+
+    for (const item of items) {
+      const entry = document.createElement('span');
+      entry.className = 'pam-chart__legend-item';
+      entry.setAttribute('role', 'listitem');
+
+      const swatch = document.createElement('span');
+      swatch.className = `pam-chart__legend-swatch pam-chart__legend-swatch--${item.type}`;
+      swatch.setAttribute('aria-hidden', 'true');
+
+      const text = document.createElement('span');
+      text.textContent = item.label;
+      entry.append(swatch, text);
+      legend.appendChild(entry);
+    }
+
+    return legend;
   }
 
   private bindTouchOutsideDismiss(onDismiss: () => void): void {

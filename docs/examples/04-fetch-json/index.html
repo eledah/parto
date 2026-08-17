@@ -4,25 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fetch JSON — Parto Examples</title>
-    <link rel="stylesheet" href="https://unpkg.com/@eledah/parto@0.1.0/dist/parto.css" />
+    <link rel="stylesheet" href="../../dist/parto.css" />
     <style>
       body {
         margin: 0;
         font-family: system-ui, sans-serif;
-        background: #f6f3ec;
-        color: #1a2328;
+        background: #fff;
+        color: #182126;
       }
       main {
         max-width: 900px;
         margin: 0 auto;
         padding: 24px;
+        text-align: center;
       }
       .back {
         font-size: 14px;
         margin-bottom: 16px;
       }
       .back a {
-        color: #2e9d61;
+        color: #285b3d;
         text-decoration: none;
       }
       .back a:hover {
@@ -33,14 +34,15 @@
         margin-bottom: 8px;
       }
       p {
-        color: #5c6b73;
-        margin-bottom: 16px;
+        color: #607078;
+        margin: 0 auto 16px;
       }
       #chart {
         height: 520px;
-        border: 1px solid #d8d2c8;
-        border-radius: 12px;
+        border: 1px solid #e1e6e8;
+        border-radius: 16px;
         background: #fff;
+        box-shadow: 0 12px 36px rgba(24, 33, 38, 0.07);
       }
     </style>
   </head>
@@ -51,7 +53,7 @@
       <p>Map data is fetched from <code>data/sample-map.json</code> with loading and error overlays.</p>
       <div id="chart"></div>
     </main>
-    <script src="https://unpkg.com/@eledah/parto@0.1.0/dist/parto.global.min.js"></script>
+    <script src="../../dist/parto.global.min.js"></script>
     <script>
       const chart = Parto.createArgumentMap('#chart', null, {
         theme: 'auto',

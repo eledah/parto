@@ -10,14 +10,14 @@
     />
     <style>
       :root {
-        --bg: #f6f3ec;
+        --bg: #ffffff;
         --surface: #ffffff;
-        --text: #1a2328;
-        --muted: #5c6b73;
-        --center: #f2c94c;
-        --support: #2e9d61;
-        --attack: #d64545;
-        --border: #d8d2c8;
+        --text: #182126;
+        --muted: #607078;
+        --center: #b08a3e;
+        --support: #3f7652;
+        --attack: #9f4f4f;
+        --border: #e1e6e8;
       }
       * {
         box-sizing: border-box;
@@ -33,23 +33,25 @@
         padding: 32px 24px 16px;
         max-width: 960px;
         margin: 0 auto;
+        text-align: center;
       }
       header h1 {
         margin: 0 0 8px;
         font-size: 1.75rem;
       }
       header p {
-        margin: 0 0 16px;
+        margin: 0 auto 16px;
         color: var(--muted);
         max-width: 42rem;
       }
       .links {
         display: flex;
+        justify-content: center;
         flex-wrap: wrap;
         gap: 12px;
       }
       .links a {
-        color: var(--support);
+        color: #285b3d;
         text-decoration: none;
         font-weight: 600;
       }
@@ -70,14 +72,15 @@
         display: block;
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 12px;
+        border-radius: 16px;
         padding: 20px;
         text-decoration: none;
+        text-align: center;
         color: inherit;
         transition: box-shadow 0.15s ease, transform 0.15s ease;
       }
       .card:hover {
-        box-shadow: 0 8px 24px rgba(26, 35, 40, 0.1);
+        box-shadow: 0 12px 32px rgba(24, 33, 38, 0.09);
         transform: translateY(-2px);
       }
       .card h2 {
@@ -96,12 +99,12 @@
         font-weight: 600;
         padding: 2px 8px;
         border-radius: 999px;
-        background: color-mix(in srgb, var(--center) 25%, transparent);
-        color: #7a5c00;
+        background: color-mix(in srgb, var(--center) 14%, transparent);
+        color: #755916;
       }
       .tag--rtl {
-        background: color-mix(in srgb, var(--support) 18%, transparent);
-        color: var(--support);
+        background: color-mix(in srgb, var(--support) 12%, transparent);
+        color: #285b3d;
       }
       footer {
         max-width: 960px;
@@ -109,6 +112,7 @@
         padding: 0 24px 32px;
         font-size: 13px;
         color: var(--muted);
+        text-align: center;
       }
     </style>
   </head>
@@ -116,7 +120,7 @@
     <header>
       <h1>Parto — Argument Map Examples</h1>
       <p>
-        Interactive sunburst charts for debate arguments. Yellow center, green agree, red
+        Interactive sunburst charts for debate arguments. Muted gold center, green agree, red
         disagree — with themes, tooltips, zoom, and mobile tap support.
       </p>
       <div class="links">

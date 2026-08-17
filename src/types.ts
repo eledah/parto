@@ -38,6 +38,7 @@ export type ThemeMode = 'light' | 'dark' | 'auto';
 export type Direction = 'ltr' | 'rtl' | 'inherit';
 
 export interface ArgumentMapLabels {
+  legend?: string;
   center: string;
   support: string;
   attack: string;
@@ -54,6 +55,7 @@ export interface NodeContext {
   id: string;
   title: string;
   type: string;
+  relationType?: RelationType;
 }
 
 export interface TreeNode extends ArgumentMapNode {
@@ -74,6 +76,8 @@ export type TooltipRenderer = (
 export interface ArgumentMapOptions {
   theme?: ThemeMode;
   colors?: Partial<ArgumentMapColors>;
+  /** Show the centered semantic-color legend inside the chart. Defaults to true. */
+  legend?: boolean;
   tooltip?: boolean | TooltipRenderer;
   zoom?: boolean;
   direction?: Direction;

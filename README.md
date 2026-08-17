@@ -4,7 +4,8 @@
 
 **Parto** (پرتو) is a framework-agnostic JavaScript library for visualizing debate argument structures as interactive sunburst charts.
 
-- Yellow center (thesis), green agree (support), red disagree (attack)
+- Muted gold center (thesis), green agree (support), red disagree (attack)
+- Optional centered legend inside the chart
 - Light / dark / system themes
 - Hover tooltips and click-to-zoom
 - ESM for bundlers + CDN global bundle for plain HTML
@@ -23,10 +24,14 @@ import '@eledah/parto/styles.css';
 
 const chart = createArgumentMap('#chart', mapData, {
   theme: 'auto',
+  legend: true,
   tooltip: true,
   zoom: true,
 });
 ```
+
+The legend is shown by default. Set `legend: false` when the surrounding UI already explains
+the semantic colors.
 
 ## CDN
 

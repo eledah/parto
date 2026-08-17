@@ -24,6 +24,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Build current library for demos
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+          mkdir -p docs/dist
+          cp dist/index.js dist/parto.css dist/parto.global.js dist/parto.global.min.js docs/dist/
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

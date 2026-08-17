@@ -43,7 +43,10 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
   private renderer: SunburstRenderer;
   private tooltip: TooltipController | null = null;
   private options: Required<
-    Pick<ArgumentMapOptions, 'theme' | 'zoom' | 'direction' | 'lang' | 'ariaLabel'>
+    Pick<
+      ArgumentMapOptions,
+      'theme' | 'legend' | 'zoom' | 'direction' | 'lang' | 'ariaLabel'
+    >
   > & {
     tooltip: boolean | TooltipRenderer;
     labels: ArgumentMapLabels;
@@ -76,6 +79,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
 
     this.options = {
       theme: options.theme ?? 'auto',
+      legend: options.legend ?? true,
       zoom: options.zoom ?? true,
       direction,
       lang: options.lang ?? 'en',
@@ -101,6 +105,8 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
 
     this.renderer = new SunburstRenderer(this.container, {
       ariaLabel: this.options.ariaLabel,
+      legend: this.options.legend,
+      labels: this.options.labels,
       zoomEnabled: this.options.zoom,
       onHover: (node, event) => this.handleHover(node, event),
       onLeave: () => this.handleLeave(),

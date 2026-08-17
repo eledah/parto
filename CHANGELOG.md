@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+
+- Refresh the chart and demos with white backgrounds and a subdued semantic palette
+- Add an optional, centered legend inside the chart canvas
+- Include relation types in zoom paths so breadcrumbs can match argument colors
+- Publish GitHub Pages demos from the current source build
+
 ## 0.1.0
 
 - Publish as `@eledah/parto` (npm package rename)

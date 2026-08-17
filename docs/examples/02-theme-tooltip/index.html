@@ -4,15 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Themes &amp; Tooltip — Parto Examples</title>
-    <link rel="stylesheet" href="https://unpkg.com/@eledah/parto@0.1.0/dist/parto.css" />
+    <link rel="stylesheet" href="../../dist/parto.css" />
     <style>
       body {
         margin: 0;
         font-family: system-ui, sans-serif;
       }
       body[data-page-theme='light'] {
-        background: #f6f3ec;
-        color: #1a2328;
+        background: #fff;
+        color: #182126;
       }
       body[data-page-theme='dark'] {
         background: #12181c;
@@ -22,13 +22,14 @@
         max-width: 960px;
         margin: 0 auto;
         padding: 24px;
+        text-align: center;
       }
       .back {
         font-size: 14px;
         margin-bottom: 16px;
       }
       .back a {
-        color: #2e9d61;
+        color: #285b3d;
         text-decoration: none;
       }
       .back a:hover {
@@ -36,6 +37,7 @@
       }
       .toolbar {
         display: flex;
+        justify-content: center;
         flex-wrap: wrap;
         gap: 8px;
         margin-bottom: 16px;
@@ -43,15 +45,17 @@
       button {
         padding: 8px 12px;
         border-radius: 8px;
-        border: 1px solid #8884;
+        border: 1px solid #8b989f66;
         background: transparent;
+        color: inherit;
         cursor: pointer;
         font: inherit;
       }
       #chart {
         height: 520px;
-        border-radius: 12px;
-        border: 1px solid #8884;
+        border-radius: 16px;
+        border: 1px solid #8b989f55;
+        box-shadow: 0 12px 36px rgba(24, 33, 38, 0.07);
       }
       .custom-tip {
         padding: 12px;
@@ -62,7 +66,7 @@
         max-width: 280px;
       }
       .custom-tip strong {
-        color: #f2c94c;
+        color: #d0b06d;
       }
     </style>
   </head>
@@ -78,7 +82,7 @@
       </div>
       <div id="chart"></div>
     </main>
-    <script src="https://unpkg.com/@eledah/parto@0.1.0/dist/parto.global.js"></script>
+    <script src="../../dist/parto.global.js"></script>
     <script type="module">
       const res = await fetch('../../data/sample-map.json');
       const mapData = await res.json();
@@ -113,9 +117,9 @@
 
       document.getElementById('recolor').addEventListener('click', () => {
         chart.setColors({
-          center: '#ffd54f',
-          support: '#43a047',
-          attack: '#e53935',
+          center: '#92733a',
+          support: '#315f4b',
+          attack: '#874547',
         });
       });
     </script>

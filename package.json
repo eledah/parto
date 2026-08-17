@@ -42,7 +42,7 @@
     "./schema.json": "./schema/argument-map.schema.json"
   },
   "bin": {
-    "parto-validate-map": "./bin/validate-map.mjs"
+    "parto-validate-map": "bin/validate-map.mjs"
   },
   "unpkg": "dist/parto.global.min.js",
   "jsdelivr": "dist/parto.global.min.js",

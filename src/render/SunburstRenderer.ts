@@ -483,6 +483,12 @@ export class SunburstRenderer {
     this.zoomBehavior = d3
       .zoom<SVGSVGElement, unknown>()
       .scaleExtent([minScale, maxScale])
+      // Explicit extent: avoids d3-zoom's defaultExtent DOM probing (which
+      // depends on viewBox/geometry quirks) and keeps panning bounds stable.
+      .extent((): [[number, number], [number, number]] => [
+        [0, 0],
+        [Math.max(1, this.width), Math.max(1, this.height)],
+      ])
       .filter((event) => {
         if (event.type === 'dblclick') return false;
         return !event.ctrlKey || event.type === 'wheel';

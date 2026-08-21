@@ -106,6 +106,18 @@
         background: color-mix(in srgb, var(--support) 12%, transparent);
         color: #285b3d;
       }
+      .tag--deep {
+        background: color-mix(in srgb, var(--support) 14%, transparent);
+        color: #285b3d;
+      }
+      .tag--labels {
+        background: color-mix(in srgb, var(--center) 16%, transparent);
+        color: #755916;
+      }
+      .tag--export {
+        background: color-mix(in srgb, var(--attack) 12%, transparent);
+        color: #7c3a38;
+      }
       footer {
         max-width: 960px;
         margin: 0 auto;
@@ -120,8 +132,8 @@
     <header>
       <h1>Parto — Argument Map Examples</h1>
       <p>
-        Interactive sunburst charts for debate arguments. Muted gold center, green agree, red
-        disagree — with themes, tooltips, zoom, and mobile tap support.
+        Interactive sunburst and icicle charts for debate arguments. Muted gold center, green agree, red
+        disagree — with themes, tooltips, zoom, deep-map layouts, export, and mobile tap support.
       </p>
       <div class="links">
         <a href="https://www.npmjs.com/package/@eledah/parto">npm</a>
@@ -151,6 +163,21 @@
           <h2>Fetch JSON</h2>
           <p>Load map data from a file with built-in loading and error states.</p>
           <span class="tag">CDN · fetch</span>
+        </a>
+        <a class="card" href="examples/05-deep-map/">
+          <h2>Deep map (7 levels)</h2>
+          <p>Leaf-weighted angles, sliver-proof rings, "+N" collapse wedges, and auto-focus.</p>
+          <span class="tag tag--deep">deep maps · layout</span>
+        </a>
+        <a class="card" href="examples/06-arc-labels/">
+          <h2>Labels &amp; lineage</h2>
+          <p>Opt-in on-arc labels, score encoding, and hover lineage back to the thesis.</p>
+          <span class="tag tag--labels">readability</span>
+        </a>
+        <a class="card" href="examples/07-icicle-export/">
+          <h2>Icicle + export</h2>
+          <p>Icicle layout engine with SVG/PNG export and shareable zoom links.</p>
+          <span class="tag tag--export">icicle · export</span>
         </a>
       </div>
     </main>

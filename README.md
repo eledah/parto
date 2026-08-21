@@ -8,6 +8,7 @@
 - Light / dark / system themes
 - Hover tooltips and click-to-zoom
 - Deep-map friendly: leaf-weighted angles, sliver-proof ring sizing, "+N" collapse wedges, auto-focus into the heaviest branch
+- Built-in navigation: breadcrumb trail, zoom controls, legend chips, wheel/pinch pan-zoom, animated zoom transitions
 - ESM for bundlers + CDN global bundle for plain HTML
 
 ## Install
@@ -26,7 +27,26 @@ const chart = createArgumentMap('#chart', mapData, {
   theme: 'auto',
   tooltip: true,
   zoom: true,
+  // arcLabels: true,    // draw titles along arcs (off by default)
+  // breadcrumb: false,  // hide the zoom-path trail
+  // legend: false,      // hide the center/support/attack key
 });
+```
+
+## Options
+
+| Option | Default | Description |
+| ------ | ------- | ----------- |
+| `theme` | `'auto'` | `'light'` \| `'dark'` \| `'auto'` |
+| `colors` | — | Override `center` / `support` / `attack` / `border` |
+| `tooltip` | `true` | Boolean or custom `(node, labels) => HTMLElement` renderer |
+| `zoom` | `true` | Click-to-focus navigation + wheel/pinch pan-zoom |
+| `arcLabels` | `false` | Truncated titles along arcs where they fit |
+| `breadcrumb` | `true` | Clickable trail of the current zoom path |
+| `legend` | `true` | Color key chips (hidden on narrow containers) |
+| `direction` / `lang` | inherit | RTL support and content language |
+| `labels` | English | All UI strings incl. status overlays |
+| `onNodeHover` / `onNodeLeave` / `onNodeClick` / `onZoomChange` / `onWarning` | — | Event hooks |
 ```
 
 ## CDN

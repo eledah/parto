@@ -2,6 +2,20 @@
 
 ## 0.2.0 (unreleased)
 
+### Navigation & interaction (Phase 3)
+
+- **Breadcrumb trail**: clickable zoom-path chips with long-trail collapsing
+  (`root … last two`), `aria-current="location"`, RTL-aware positioning.
+- **Zoom controls**: +/⌂/− stack; `+` focuses the heaviest branch, `⌂` resets
+  both tree focus and the viewport transform, `−` disables at the root.
+- **Animated transitions**: keyed arc join with angle tweens between focus
+  states (~450ms); entering arcs grow from their parent's previous position,
+  exits fade. Resize-driven renders and `prefers-reduced-motion` skip tweens.
+- **Wheel/pinch pan-zoom**: viewport transform scoped to the chart
+  (`scaleExtent 0.5–8`), double-click left free for focus navigation.
+- **Legend chips**: center/support/attack key, auto-hidden on narrow containers.
+- New options: `breadcrumb?: boolean`, `legend?: boolean`.
+
 ### Readability (Phase 2)
 
 - **Lineage highlight**: hovering or focusing an arc lights its ancestor chain

@@ -207,6 +207,147 @@
   margin-top: 8px;
 }
 
+/* Breadcrumb trail (top corner, RTL-aware via logical properties) */
+.pam-breadcrumbs {
+  position: absolute;
+  inset-block-start: 10px;
+  inset-inline-start: 12px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100% - 90px);
+  font-size: 12.5px;
+}
+
+.pam-breadcrumbs__crumbs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pam-breadcrumbs__crumb {
+  appearance: none;
+  border: none;
+  background: color-mix(in srgb, var(--pam-surface, #fff) 88%, transparent);
+  color: var(--pam-text, #1a2328);
+  font: inherit;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--pam-border) 35%, transparent);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.pam-breadcrumbs__crumb:hover:not(:disabled) {
+  border-color: var(--pam-center);
+}
+
+.pam-breadcrumbs__crumb:disabled {
+  cursor: default;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--pam-center) 18%, var(--pam-surface));
+}
+
+.pam-breadcrumbs__crumb:focus-visible {
+  outline: 2px solid var(--pam-center);
+  outline-offset: 1px;
+}
+
+.pam-breadcrumbs__sep,
+.pam-breadcrumbs__ellipsis {
+  color: var(--pam-text-muted);
+  user-select: none;
+}
+
+/* Zoom controls (bottom corner stack) */
+.pam-zoom-controls {
+  position: absolute;
+  inset-block-end: 12px;
+  inset-inline-end: 12px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pam-zoom-controls__btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--pam-border) 35%, transparent);
+  background: color-mix(in srgb, var(--pam-surface, #fff) 92%, transparent);
+  color: var(--pam-text);
+  cursor: pointer;
+}
+
+.pam-zoom-controls__btn:hover:not(:disabled) {
+  border-color: var(--pam-center);
+}
+
+.pam-zoom-controls__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pam-zoom-controls__btn:focus-visible,
+.pam-legend:focus-visible {
+  outline: 2px solid var(--pam-center);
+  outline-offset: 1px;
+}
+
+/* Legend chips (bottom corner key) */
+.pam-legend {
+  position: absolute;
+  inset-block-end: 12px;
+  inset-inline-start: 12px;
+  z-index: 2;
+  display: flex;
+  gap: 12px;
+  pointer-events: none;
+  font-size: 12px;
+  color: var(--pam-text-muted);
+}
+
+.pam-legend__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pam-legend__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pam-legend__chip--center .pam-legend__dot {
+  background: var(--pam-center);
+}
+
+.pam-legend__chip--support .pam-legend__dot {
+  background: var(--pam-support);
+}
+
+.pam-legend__chip--attack .pam-legend__dot {
+  background: var(--pam-attack);
+}
+
+@media (max-width: 480px) {
+  .pam-legend {
+    display: none;
+  }
+}
+
 /* Chart status overlay (loading / empty / error) */
 .pam-chart__status {
   position: absolute;

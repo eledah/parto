@@ -11,6 +11,9 @@ import { ZoomController } from './core/ZoomController.js';
 import { SunburstRenderer } from './render/SunburstRenderer.js';
 import { createDefaultTooltip, TooltipController } from './ui/TooltipController.js';
 import { ChartStatusOverlay } from './ui/ChartStatus.js';
+import { BreadcrumbBar } from './ui/BreadcrumbBar.js';
+import { LegendChips } from './ui/LegendChips.js';
+import { ZoomControls } from './ui/ZoomControls.js';
 import { ValidationError } from './errors.js';
 import type {
   ArgumentMapChart,
@@ -47,6 +50,8 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
   > & {
     tooltip: boolean | TooltipRenderer;
     arcLabels: boolean;
+    breadcrumb: boolean;
+    legend: boolean;
     labels: ArgumentMapLabels;
     onNodeHover?: ArgumentMapOptions['onNodeHover'];
     onNodeLeave?: ArgumentMapOptions['onNodeLeave'];
@@ -58,6 +63,10 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
   private themeListener: ((e: MediaQueryListEvent) => void) | null = null;
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
   private status: ChartStatusOverlay;
+  private breadcrumbs: BreadcrumbBar | null = null;
+  private controls: ZoomControls | null = null;
+  private legend: LegendChips | null = null;
+  private overlayObserver: ResizeObserver | null = null;
 
   constructor(
     target: string | HTMLElement,
@@ -83,6 +92,8 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
       ariaLabel: options.ariaLabel ?? 'Argument map chart',
       tooltip: options.tooltip ?? true,
       arcLabels: options.arcLabels ?? false,
+      breadcrumb: options.breadcrumb ?? true,
+      legend: options.legend ?? true,
       labels: mergeLabels(options.labels),
       onNodeHover: options.onNodeHover,
       onNodeLeave: options.onNodeLeave,
@@ -123,6 +134,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
       );
     }
 
+    this.createOverlays();
     this.applyTheme(this.options.theme);
     this.bindKeyboard();
 
@@ -242,9 +254,16 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
     if (this.keydownHandler) {
       document.removeEventListener('keydown', this.keydownHandler);
     }
+    if (this.overlayObserver) {
+      this.overlayObserver.disconnect();
+      this.overlayObserver = null;
+    }
     this.tooltip?.destroy();
     this.status.destroy();
     this.renderer.destroy();
+    this.breadcrumbs?.destroy();
+    this.controls?.destroy();
+    this.legend?.destroy();
     this.container.classList.remove('pam-chart', 'pam-chart--light', 'pam-chart--dark');
     if (this.options.direction !== 'inherit') {
       this.container.removeAttribute('dir');
@@ -257,7 +276,53 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
   }
 
   private emitZoomChange(): void {
-    this.options.onZoomChange?.(this.zoom.getZoomPath());
+    const path = this.zoom.getZoomPath();
+    this.breadcrumbs?.update(path);
+    this.controls?.setCanZoomOut(this.zoom.canZoomOut());
+    this.options.onZoomChange?.(path);
+  }
+
+  private createOverlays(): void {
+    if (this.options.breadcrumb && this.options.zoom) {
+      this.breadcrumbs = new BreadcrumbBar(this.container, {
+        onNavigate: (path) => this.zoomToPath(path.map((n) => n.id)),
+      });
+    }
+    if (this.options.zoom) {
+      this.controls = new ZoomControls(
+        this.container,
+        {
+          zoomIn: () => {
+            if (this.zoom.zoomIntoHeaviest()) {
+              this.render();
+              this.emitZoomChange();
+            }
+          },
+          zoomOut: () => this.zoomOut(),
+          reset: () => {
+            this.resetZoom();
+            this.renderer.resetView();
+          },
+        },
+        this.options.labels,
+      );
+    }
+    if (this.options.legend) {
+      this.legend = new LegendChips(this.container, { labels: this.options.labels });
+    }
+
+    if (this.breadcrumbs || this.controls || this.legend) {
+      this.overlayObserver = new ResizeObserver(() => this.syncOverlayVisibility());
+      this.overlayObserver.observe(this.container);
+      this.syncOverlayVisibility();
+    }
+  }
+
+  private syncOverlayVisibility(): void {
+    const wideEnough = this.container.clientWidth >= chartConfig.ui.minOverlayWidth;
+    this.breadcrumbs?.setVisible(wideEnough);
+    this.controls?.setVisible(wideEnough);
+    this.legend?.setVisible(wideEnough);
   }
 
   private handleHover(node: TreeNode, event: MouseEvent | FocusEvent | PointerEvent): void {

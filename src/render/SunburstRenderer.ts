@@ -27,14 +27,21 @@ export class SunburstRenderer {
   private height = 0;
   private radius = 0;
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+  /** Pan/zoom target group (transformed by wheel/pinch). */
+  private gRoot: d3.Selection<SVGGElement, unknown, null, undefined>;
+  /** Content group, centered; arcs + labels live here. */
   private g: d3.Selection<SVGGElement, unknown, null, undefined>;
+  private zoomBehavior: d3.ZoomBehavior<SVGSVGElement, unknown> | null = null;
   private partition = d3.partition<TreeNode>();
-  private arc: d3.Arc<unknown, D3Node>;
   private currentRoot: TreeNode | null = null;
   private highlightId: string | null = null;
+  /** Disabled during resize-driven renders so window dragging never tweens. */
+  private animate = true;
   private resizeObserver: ResizeObserver | null = null;
   private options: SunburstRendererOptions;
   private tooltipId: string;
+  /** Final angles from the last render; the tween source for transitions. */
+  private prevGeometry = new Map<string, { x0: number; x1: number }>();
   /** First touch tap shows tooltip; second tap on same arc triggers zoom. */
   private touchZoomPathKey: string | null = null;
   private touchOutsideHandler: ((event: PointerEvent) => void) | null = null;
@@ -59,17 +66,12 @@ export class SunburstRenderer {
       .attr('role', 'img')
       .attr('aria-label', options.ariaLabel);
 
-    this.g = this.svg.append('g');
+    this.gRoot = this.svg.append('g');
+    this.g = this.gRoot.append('g');
+
+    this.initPanZoom();
 
     this.partition = d3.partition<TreeNode>().size([2 * Math.PI, 1]);
-
-    this.arc = d3
-      .arc<unknown, D3Node>()
-      .startAngle((d) => d.x0)
-      .endAngle((d) => d.x1)
-      .padAngle(chartConfig.spacing.padAngle.inner)
-      .innerRadius((d) => d.y0)
-      .outerRadius((d) => d.y1);
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(container);
@@ -97,14 +99,22 @@ export class SunburstRenderer {
     this.svg.attr('viewBox', `0 0 ${this.width} ${this.height}`);
     this.g.attr('transform', `translate(${this.width / 2}, ${this.height / 2})`);
 
-    if (this.currentRoot) this.render(this.currentRoot);
+    if (this.currentRoot) {
+      const wasAnimated = this.animate;
+      this.animate = false;
+      try {
+        this.render(this.currentRoot);
+      } finally {
+        this.animate = wasAnimated;
+      }
+    }
   }
 
   setHighlight(nodeId: string | null): void {
     this.highlightId = nodeId;
     const lineage = nodeId ? this.lineageIds(nodeId) : new Set<string>();
     this.g
-      .selectAll<SVGPathElement, D3Node>('path')
+      .selectAll<SVGPathElement, D3Node>('path.pam-arc')
       .classed('pam-arc--highlighted', (d) => nodeId === d.data.id)
       .classed('pam-arc--ancestor', (d) => lineage.has(d.data.id))
       .classed('pam-arc--dimmed', (d) => {
@@ -117,7 +127,7 @@ export class SunburstRenderer {
   private lineageIds(nodeId: string): Set<string> {
     const ids = new Set<string>();
     const target = this.g
-      .selectAll<SVGPathElement, D3Node>('path')
+      .selectAll<SVGPathElement, D3Node>('path.pam-arc')
       .data()
       .find((d) => d.data.id === nodeId);
     for (let p = target?.parent; p; p = p.parent) {
@@ -193,23 +203,103 @@ export class SunburstRenderer {
 
     const verticalGap = this.radius * chartConfig.spacing.verticalGap;
 
-    this.arc
-      .innerRadius((d) => bands[d.depth] + verticalGap)
-      .outerRadius((d) => bands[d.depth + 1] - verticalGap)
-      .padAngle((d) => getPadAngle(d.depth))
-      .cornerRadius(chartConfig.chart.cornerRadius);
+    // Radius accessors are static per render; only angles change (statically or
+    // via tweens). Angle specs may be constants or per-datum accessors.
+    type AngleSpec = (d: D3Node) => number;
+    const buildArc = (getStart: AngleSpec, getEnd: AngleSpec): d3.Arc<unknown, D3Node> =>
+      d3
+        .arc<unknown, D3Node>()
+        .startAngle(getStart)
+        .endAngle(getEnd)
+        .innerRadius((d) => bands[d.depth] + verticalGap)
+        .outerRadius((d) => bands[d.depth + 1] - verticalGap)
+        .padAngle((d) => getPadAngle(d.depth))
+        .cornerRadius(chartConfig.chart.cornerRadius);
+    const arcFinal = buildArc(
+      (d) => d.x0,
+      (d) => d.x1,
+    );
 
-    this.g.selectAll('*').remove();
+    const reducedMotion =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const duration = this.animate === false || reducedMotion ? 0 : chartConfig.chart.transitionDuration;
 
-    const paths = this.g
-      .selectAll<SVGPathElement, D3Node>('path')
-      .data(root.descendants())
+    // Tween sources: last render's finals, falling back up the tree so new
+    // subtrees grow out of their parent's previous position.
+    const oldFinals = this.prevGeometry;
+    const starts = new Map<string, { x0: number; x1: number }>();
+    for (const node of root.descendants()) {
+      const prev = oldFinals.get(node.data.pathKey);
+      if (prev) {
+        starts.set(node.data.pathKey, prev);
+        continue;
+      }
+      const parentStart = node.parent ? starts.get(node.parent.data.pathKey) : undefined;
+      starts.set(node.data.pathKey, parentStart ?? { x0: node.x0, x1: node.x1 });
+    }
+    this.prevGeometry = new Map(
+      root.descendants().map((n) => [n.data.pathKey, { x0: n.x0, x1: n.x1 } as const]),
+    );
+
+    this.g.selectAll('g.pam-labels').remove();
+
+    type ArcSelection = d3.Selection<SVGPathElement, D3Node, SVGGElement, undefined>;
+    const join = this.g
+      .selectAll<SVGPathElement, D3Node>('path.pam-arc')
+      .data(root.descendants(), (d) => d.data.pathKey);
+
+    const enterPaths: ArcSelection = join
       .enter()
       .append('path')
-      .attr('d', this.arc)
+      .attr('class', (d) => `pam-arc ${getNodeArcClass(d.data, rootNode)}`)
+      .attr('d', (d) => {
+        const start = starts.get(d.data.pathKey)!;
+        return buildArc(
+          () => start.x0,
+          () => start.x1,
+        )(d) ?? '';
+      });
+
+    if (duration === 0) {
+      join.exit().remove();
+    } else {
+      (join.exit() as unknown as ArcSelection)
+        .transition()
+        .duration(duration)
+        .style('opacity', 0)
+        .remove();
+    }
+
+    const paths: ArcSelection = enterPaths.merge(join as unknown as ArcSelection);
+
+    if (duration > 0) {
+      paths
+        .transition()
+        .duration(duration)
+        .attrTween('d', (d) => {
+          const start = starts.get(d.data.pathKey)!;
+          const ix0 = d3.interpolate(start.x0, d.x0);
+          const ix1 = d3.interpolate(start.x1, d.x1);
+          let a0 = start.x0;
+          let a1 = start.x1;
+          const arcAt = buildArc(
+            () => a0,
+            () => a1,
+          );
+          return (t: number) => {
+            a0 = ix0(t);
+            a1 = ix1(t);
+            return arcAt(d) ?? '';
+          };
+        });
+    } else {
+      paths.attr('d', (d) => arcFinal(d) ?? '');
+    }
+
+    paths
       .attr('data-node-id', (d) => d.data.id)
       .attr('data-path-key', (d) => d.data.pathKey)
-      .attr('class', (d) => getNodeArcClass(d.data, rootNode))
       .attr('tabindex', '0')
       .attr('role', 'button')
       .attr('aria-label', (d) =>
@@ -319,6 +409,34 @@ export class SunburstRenderer {
 
   getTooltipElementId(): string {
     return this.tooltipId;
+  }
+
+  /** Wheel/pinch viewport pan-zoom, scoped so double-click stays free for focus. */
+  private initPanZoom(): void {
+    const [minScale, maxScale] = chartConfig.ui.scaleExtent;
+    this.zoomBehavior = d3
+      .zoom<SVGSVGElement, unknown>()
+      .scaleExtent([minScale, maxScale])
+      .filter((event) => {
+        if (event.type === 'dblclick') return false;
+        return !event.ctrlKey || event.type === 'wheel';
+      })
+      .on('zoom', (event) => {
+        this.gRoot.attr(
+          'transform',
+          `translate(${event.transform.x},${event.transform.y}) scale(${event.transform.k})`,
+        );
+      });
+    this.svg.call(this.zoomBehavior).on('dblclick.zoom', null);
+  }
+
+  /** Animate the viewport back to identity. */
+  resetView(): void {
+    if (!this.zoomBehavior) return;
+    this.svg
+      .transition()
+      .duration(chartConfig.chart.transitionDuration)
+      .call(this.zoomBehavior.transform, d3.zoomIdentity);
   }
 
   /**

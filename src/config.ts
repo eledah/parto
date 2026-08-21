@@ -35,6 +35,14 @@ export const chartConfig = {
     minRadius: 10,
     cornerRadius: 3,
     strokeWidth: 0.5,
+    /** Zoom/focus transition length in ms; 0 when prefers-reduced-motion. */
+    transitionDuration: 450,
+  },
+  ui: {
+    /** Hide breadcrumb/legend overlays below this container width (px). */
+    minOverlayWidth: 320,
+    /** Viewport scale limits for wheel/pinch pan-zoom. */
+    scaleExtent: [0.5, 8] as [number, number],
   },
   spacing: {
     verticalGap: 0.01,

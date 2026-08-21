@@ -48,6 +48,10 @@ export interface ArgumentMapLabels {
   statusLoading: string;
   statusEmpty: string;
   statusError: string;
+  /** Optional UI-overlay labels (English fallbacks when omitted). */
+  zoomIn?: string;
+  zoomOutLabel?: string;
+  resetZoom?: string;
 }
 
 export interface NodeContext {
@@ -89,6 +93,10 @@ export interface ArgumentMapOptions {
   zoom?: boolean;
   /** Render truncated titles along arcs when there is room (default: false). */
   arcLabels?: boolean;
+  /** Show a clickable breadcrumb trail of the current zoom path (default: true). */
+  breadcrumb?: boolean;
+  /** Show center/support/attack legend chips (default: true). */
+  legend?: boolean;
   direction?: Direction;
   lang?: string;
   labels?: Partial<ArgumentMapLabels>;

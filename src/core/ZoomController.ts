@@ -102,6 +102,21 @@ export class ZoomController {
     return true;
   }
 
+  canZoomOut(): boolean {
+    return this.zoomStack.length > 1;
+  }
+
+  /** Focus into the heaviest (leaf-weighted) child of the current focus root. */
+  zoomIntoHeaviest(): boolean {
+    const root = this.getFocusRoot();
+    if (!root || root.children.length === 0) return false;
+    let heaviest = root.children[0]!;
+    for (const child of root.children) {
+      if (child.value > heaviest.value) heaviest = child;
+    }
+    return this.zoomIn(heaviest);
+  }
+
   handleClick(node: TreeNode, depth: number, hasChildren: boolean): void {
     if (depth === 0) {
       this.zoomOut();

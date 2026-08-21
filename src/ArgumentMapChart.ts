@@ -13,7 +13,6 @@ import { createRenderer, type MapRenderer } from './render/index.js';
 import { createDefaultTooltip, TooltipController } from './ui/TooltipController.js';
 import { ChartStatusOverlay } from './ui/ChartStatus.js';
 import { BreadcrumbBar } from './ui/BreadcrumbBar.js';
-import { LegendChips } from './ui/LegendChips.js';
 import { ZoomControls } from './ui/ZoomControls.js';
 import { ValidationError } from './errors.js';
 import { backgroundColorOf, rasterizeToPng, serializeChartSVG } from './core/exportImage.js';
@@ -49,7 +48,10 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
   private renderer: MapRenderer;
   private tooltip: TooltipController | null = null;
   private options: Required<
-    Pick<ArgumentMapOptions, 'theme' | 'zoom' | 'direction' | 'lang' | 'ariaLabel'>
+    Pick<
+      ArgumentMapOptions,
+      'theme' | 'legend' | 'zoom' | 'direction' | 'lang' | 'ariaLabel'
+    >
   > & {
     tooltip: boolean | TooltipRenderer;
     arcLabels: boolean;
@@ -69,7 +71,6 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
   private status: ChartStatusOverlay;
   private breadcrumbs: BreadcrumbBar | null = null;
   private controls: ZoomControls | null = null;
-  private legend: LegendChips | null = null;
   private overlayObserver: ResizeObserver | null = null;
 
   constructor(
@@ -90,6 +91,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
 
     this.options = {
       theme: options.theme ?? 'auto',
+      legend: options.legend ?? true,
       zoom: options.zoom ?? true,
       direction,
       lang: options.lang ?? 'en',
@@ -97,7 +99,6 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
       tooltip: options.tooltip ?? true,
       arcLabels: options.arcLabels ?? false,
       breadcrumb: options.breadcrumb ?? true,
-      legend: options.legend ?? true,
       layoutMode: options.layoutMode ?? 'sunburst',
       labels: mergeLabels(options.labels),
       onNodeHover: options.onNodeHover,
@@ -129,6 +130,8 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
 
     this.renderer = createRenderer(this.container, {
       ariaLabel: this.options.ariaLabel,
+      legend: this.options.legend,
+      labels: this.options.labels,
       zoomEnabled: this.options.zoom,
       arcLabels: this.options.arcLabels,
       onHover: (node, event) => this.handleHover(node, event),
@@ -288,7 +291,6 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
     this.renderer.destroy();
     this.breadcrumbs?.destroy();
     this.controls?.destroy();
-    this.legend?.destroy();
     this.container.classList.remove('pam-chart', 'pam-chart--light', 'pam-chart--dark');
     if (this.options.direction !== 'inherit') {
       this.container.removeAttribute('dir');
@@ -332,11 +334,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
         this.options.labels,
       );
     }
-    if (this.options.legend) {
-      this.legend = new LegendChips(this.container, { labels: this.options.labels });
-    }
-
-    if (this.breadcrumbs || this.controls || this.legend) {
+    if (this.breadcrumbs || this.controls) {
       this.overlayObserver = new ResizeObserver(() => this.syncOverlayVisibility());
       this.overlayObserver.observe(this.container);
       this.syncOverlayVisibility();
@@ -347,7 +345,6 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
     const wideEnough = this.container.clientWidth >= this.config.ui.minOverlayWidth;
     this.breadcrumbs?.setVisible(wideEnough);
     this.controls?.setVisible(wideEnough);
-    this.legend?.setVisible(wideEnough);
   }
 
   private handleHover(node: TreeNode, event: MouseEvent | FocusEvent | PointerEvent): void {

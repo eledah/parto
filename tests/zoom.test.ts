@@ -29,7 +29,7 @@ const nodes: ArgumentMapNode[] = [
     description: '',
     quote: '',
     speaker: '',
-    relations: [{ target_node_id: '2', relation_type: 'support', reasoning: '' }],
+    relations: [{ target_node_id: '2', relation_type: 'attack', reasoning: '' }],
   },
 ];
 
@@ -55,6 +55,11 @@ describe('ZoomController', () => {
     zoom.setTree(tree);
     expect(zoom.zoomToPath(['1', '2', '3'])).toBe(true);
     expect(zoom.getFocusRoot()?.id).toBe('3');
+    expect(zoom.getZoomPath().map((node) => node.relationType)).toEqual([
+      undefined,
+      'support',
+      'attack',
+    ]);
   });
 
   describe('autoFocusDeep', () => {

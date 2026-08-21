@@ -2,6 +2,7 @@
 
 ## 0.2.0
 
+<<<<<<< HEAD
 ### Architecture & layouts (Phase 4)
 
 - **Per-instance config**: every chart resolves a frozen config snapshot at
@@ -73,6 +74,13 @@
   `hierarchy.sum()`.
 - New test suites: ring-layout invariants (incl. randomized adversarial spans),
   collapse behavior, leaf weights, auto-focus/wedge navigation.
+
+### Presentation & release
+
+- Refresh the chart and demos with white backgrounds and a subdued semantic palette
+- Add an optional, centered legend inside the chart canvas
+- Include relation types in zoom paths so breadcrumbs can match argument colors
+- Publish GitHub Pages demos from the current source build
 
 ## 0.1.0
 

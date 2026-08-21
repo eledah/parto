@@ -1,6 +1,7 @@
 import type { ArgumentMapColors, ArgumentMapLabels } from './types.js';
 
 export const DEFAULT_LABELS: ArgumentMapLabels = {
+  legend: 'Argument types',
   center: 'Center',
   support: 'Agree',
   attack: 'Disagree',
@@ -14,10 +15,10 @@ export const DEFAULT_LABELS: ArgumentMapLabels = {
 };
 
 export const DEFAULT_COLORS: ArgumentMapColors = {
-  center: '#f2c94c',
-  support: '#2e9d61',
-  attack: '#d64545',
-  border: '#1a2328',
+  center: '#b08a3e',
+  support: '#3f7652',
+  attack: '#9f4f4f',
+  border: '#ffffff',
 };
 
 export interface ArgumentMapColorConfig {

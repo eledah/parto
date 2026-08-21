@@ -7,47 +7,80 @@
     <link rel="stylesheet" href="../../dist/parto.css" />
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600&display=swap');
+      :root {
+        --center: #755916;
+        --support: #285b3d;
+        --attack: #7f3737;
+        --border: #e1e6e8;
+        --muted: #607078;
+      }
       body {
         margin: 0;
         font-family: 'Vazirmatn', system-ui, sans-serif;
-        background: #f6f3ec;
-        color: #1a2328;
+        background: #fff;
+        color: #182126;
       }
       main {
         max-width: 960px;
         margin: 0 auto;
         padding: 24px;
+        text-align: center;
       }
       #breadcrumb {
-        margin-bottom: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px;
+        min-height: 28px;
+        margin: 0 auto 14px;
         font-size: 14px;
-        color: #5c6b73;
+        color: var(--muted);
       }
       #breadcrumb button {
         background: none;
         border: none;
-        color: #2e9d61;
         cursor: pointer;
         font: inherit;
-        padding: 0 4px;
+        font-weight: 650;
+        padding: 2px 4px;
+      }
+      #breadcrumb button[data-relation='center'] {
+        color: var(--center);
+      }
+      #breadcrumb button[data-relation='support'] {
+        color: var(--support);
+      }
+      #breadcrumb button[data-relation='attack'] {
+        color: var(--attack);
+      }
+      #breadcrumb button[aria-current='page'] {
+        font-weight: 750;
+      }
+      .breadcrumb__separator {
+        color: #9aa5aa;
+        font-weight: 600;
       }
       #chart {
         height: 560px;
-        border: 1px solid #d8d2c8;
-        border-radius: 12px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
         background: #fff;
+        box-shadow: 0 12px 36px rgba(24, 33, 38, 0.07);
       }
       .sidebar {
         margin-top: 16px;
         display: flex;
+        justify-content: center;
         gap: 8px;
         flex-wrap: wrap;
       }
       .sidebar button {
         padding: 6px 10px;
         border-radius: 8px;
-        border: 1px solid #d8d2c8;
+        border: 1px solid var(--border);
         background: #fff;
+        color: #324149;
         cursor: pointer;
         font: inherit;
       }
@@ -81,6 +114,7 @@
         direction: 'rtl',
         lang: 'fa',
         labels: {
+          legend: 'راهنمای رنگ‌ها',
           center: 'گزاره اصلی',
           support: 'تأیید',
           attack: 'حمله',
@@ -94,12 +128,18 @@
           breadcrumb.replaceChildren();
           path.forEach((node, i) => {
             if (i > 0) {
-              const sep = document.createTextNode(' › ');
+              const sep = document.createElement('span');
+              sep.className = 'breadcrumb__separator';
+              sep.textContent = '‹';
               breadcrumb.append(sep);
             }
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.textContent = node.title;
+            btn.dataset.relation = node.relationType ?? 'center';
+            if (i === path.length - 1) {
+              btn.setAttribute('aria-current', 'page');
+            }
             btn.addEventListener('click', () => {
               chart.zoomToPath(path.slice(0, i + 1).map((p) => p.id));
             });

@@ -139,20 +139,17 @@ describe('navigation overlays', () => {
     chart.destroy();
   });
 
-  it('legend chips render by default and can be disabled', () => {
+  it('the centered legend renders by default and can be disabled', () => {
     mount();
     const chart = createArgumentMap('#chart', null, { theme: 'light' });
     chart.setData(sample());
-    const chips = Array.from(document.querySelectorAll('.pam-legend__chip')).map(
-      (c) => c.textContent,
-    );
-    expect(chips).toEqual(['Center', 'Agree', 'Disagree']);
+    expect(document.querySelector('.pam-chart__legend')).toBeTruthy();
     chart.destroy();
 
     mount();
     const bare = createArgumentMap('#chart', null, { theme: 'light', legend: false });
     bare.setData(sample());
-    expect(document.querySelector('.pam-legend')).toBeNull();
+    expect(document.querySelector('.pam-chart__legend')).toBeNull();
     bare.destroy();
   });
 

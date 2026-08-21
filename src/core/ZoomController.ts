@@ -24,7 +24,12 @@ export class ZoomController {
   }
 
   getZoomPath(): NodeContext[] {
-    return this.zoomStack.map((n) => ({ id: n.id, title: n.title, type: n.type }));
+    return this.zoomStack.map((n) => ({
+      id: n.id,
+      title: n.title,
+      type: n.type,
+      relationType: n.relationType,
+    }));
   }
 
   resetZoom(): void {

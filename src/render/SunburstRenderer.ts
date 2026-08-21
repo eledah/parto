@@ -1,18 +1,21 @@
 import * as d3 from 'd3';
 import type { HierarchyRectangularNode } from 'd3-hierarchy';
-import { resolveConfig, syncColorsFromCssInto } from '../config.js';
+import { DEFAULT_LABELS, resolveConfig, syncColorsFromCssInto } from '../config.js';
 import type { ResolvedChartConfig } from '../config.js';
 import { getNodeArcClass, getNodeColor } from '../core/buildTree.js';
 import { applyCollapse, isWedge } from '../core/collapse.js';
 import { computeRingBoundaries, legacyExponentBoundaries } from '../core/ringLayout.js';
 import { scoreFillStyle, scoreStrokeDash } from './scoreEncoding.js';
-import type { TreeNode } from '../types.js';
+import type { ArgumentMapLabels, TreeNode } from '../types.js';
 
 type D3Node = HierarchyRectangularNode<TreeNode>;
 type InteractionEvent = PointerEvent | FocusEvent;
 
 export interface SunburstRendererOptions {
   ariaLabel: string;
+  /** Show the centered semantic-color legend inside the canvas (default true). */
+  legend?: boolean;
+  labels?: ArgumentMapLabels;
   zoomEnabled: boolean;
   /** Draw truncated titles along arcs when there is room (default false). */
   arcLabels?: boolean;
@@ -35,6 +38,7 @@ export class SunburstRenderer {
   private g: d3.Selection<SVGGElement, unknown, null, undefined>;
   private zoomBehavior: d3.ZoomBehavior<SVGSVGElement, unknown> | null = null;
   private partition = d3.partition<TreeNode>();
+  private legend: HTMLElement | null = null;
   private currentRoot: TreeNode | null = null;
   private highlightId: string | null = null;
   /** Disabled during resize-driven renders so window dragging never tweens. */
@@ -72,6 +76,11 @@ export class SunburstRenderer {
     this.gRoot = this.svg.append('g');
     this.g = this.gRoot.append('g');
 
+    if (this.options.legend ?? true) {
+      this.legend = this.createLegend(this.options.labels ?? DEFAULT_LABELS);
+      this.chartRoot.appendChild(this.legend);
+    }
+
     this.initPanZoom();
 
     this.partition = d3.partition<TreeNode>().size([2 * Math.PI, 1]);
@@ -91,16 +100,21 @@ export class SunburstRenderer {
   }
 
   resize(): void {
+    // Canvas is sized 100% to the container; measuring the container keeps
+    // programmatic-resize callers honest even before canvas layout settles.
     const rect = this.container.getBoundingClientRect();
     this.width = rect.width;
     this.height = rect.height;
-    this.radius = Math.min(this.width, this.height) / 2 - this.config.chart.radiusPadding;
+    const measuredLegendHeight = this.legend?.getBoundingClientRect().height ?? 0;
+    const legendInset = this.legend ? Math.max(56, measuredLegendHeight + 28) : 0;
+    const plotHeight = Math.max(0, this.height - legendInset);
+    this.radius = Math.min(this.width, plotHeight) / 2 - this.config.chart.radiusPadding;
 
     if (this.radius < this.config.chart.minRadius) return;
 
     this.partition.size([2 * Math.PI, 1]);
     this.svg.attr('viewBox', `0 0 ${this.width} ${this.height}`);
-    this.g.attr('transform', `translate(${this.width / 2}, ${this.height / 2})`);
+    this.g.attr('transform', `translate(${this.width / 2}, ${plotHeight / 2})`);
 
     if (this.currentRoot) {
       const wasAnimated = this.animate;
@@ -371,7 +385,11 @@ export class SunburstRenderer {
           if (n.data.id !== d.data.id) return null;
           try {
             const nodeColor = getNodeColor(d.data, rootNode, colors);
-            return `brightness(${d.depth === 0 ? 1.05 : 1.2}) drop-shadow(0 0 10px ${nodeColor})`;
+            const shadowColor = d3.color(nodeColor);
+            if (shadowColor) shadowColor.opacity = 0.28;
+            return `brightness(${d.depth === 0 ? 1.02 : 1.06}) drop-shadow(0 2px 5px ${
+              shadowColor?.formatRgb() ?? nodeColor
+            })`;
           } catch {
             return null;
           }
@@ -558,6 +576,36 @@ export class SunburstRenderer {
         .attr('text-anchor', 'middle')
         .text(title);
     }
+  }
+
+  private createLegend(labels: ArgumentMapLabels): HTMLElement {
+    const legend = document.createElement('div');
+    legend.className = 'pam-chart__legend';
+    legend.setAttribute('role', 'list');
+    legend.setAttribute('aria-label', labels.legend ?? 'Argument types');
+
+    const items = [
+      { type: 'center', label: labels.center },
+      { type: 'support', label: labels.support },
+      { type: 'attack', label: labels.attack },
+    ] as const;
+
+    for (const item of items) {
+      const entry = document.createElement('span');
+      entry.className = 'pam-chart__legend-item';
+      entry.setAttribute('role', 'listitem');
+
+      const swatch = document.createElement('span');
+      swatch.className = `pam-chart__legend-swatch pam-chart__legend-swatch--${item.type}`;
+      swatch.setAttribute('aria-hidden', 'true');
+
+      const text = document.createElement('span');
+      text.textContent = item.label;
+      entry.append(swatch, text);
+      legend.appendChild(entry);
+    }
+
+    return legend;
   }
 
   private bindTouchOutsideDismiss(onDismiss: () => void): void {

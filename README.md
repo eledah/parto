@@ -4,7 +4,8 @@
 
 **Parto** (پرتو) is a framework-agnostic JavaScript library for visualizing debate argument structures as interactive sunburst charts.
 
-- Yellow center (thesis), green agree (support), red disagree (attack)
+- Muted gold center (thesis), green agree (support), red disagree (attack)
+- Optional centered legend inside the chart
 - Light / dark / system themes
 - Hover tooltips and click-to-zoom
 - Deep-map friendly: leaf-weighted angles, sliver-proof ring sizing, "+N" collapse wedges, auto-focus into the heaviest branch
@@ -28,6 +29,7 @@ import '@eledah/parto/styles.css';
 
 const chart = createArgumentMap('#chart', mapData, {
   theme: 'auto',
+  legend: true,
   tooltip: true,
   zoom: true,
   // arcLabels: true,    // draw titles along arcs (off by default)
@@ -46,13 +48,15 @@ const chart = createArgumentMap('#chart', mapData, {
 | `zoom` | `true` | Click-to-focus navigation + wheel/pinch pan-zoom |
 | `arcLabels` | `false` | Truncated titles along arcs where they fit |
 | `breadcrumb` | `true` | Clickable trail of the current zoom path |
-| `legend` | `true` | Color key chips (hidden on narrow containers) |
+| `legend` | `true` | Centered color key inside the canvas; set `false` when surrounding UI explains the colors |
 | `layoutMode` | `'sunburst'` | `'sunburst'` \| `'icicle'` visual engine |
 | `layout` | — | Tuning: `maxVisibleDepth`, `minAngle`, `angleWeight` (0–1), `ringScale`, `aggregation` |
 | `direction` / `lang` | inherit | RTL support and content language |
-| `labels` | English | All UI strings incl. status overlays |
+| `labels` | English | All UI strings incl. status overlays and the legend label |
 | `onNodeHover` / `onNodeLeave` / `onNodeClick` / `onZoomChange` / `onWarning` | — | Event hooks |
-```
+
+The legend is shown by default. Set `legend: false` when the surrounding UI already explains
+the semantic colors.
 
 ## CDN
 

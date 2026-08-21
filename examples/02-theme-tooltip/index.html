@@ -11,8 +11,8 @@
         font-family: system-ui, sans-serif;
       }
       body[data-page-theme='light'] {
-        background: #f6f3ec;
-        color: #1a2328;
+        background: #fff;
+        color: #182126;
       }
       body[data-page-theme='dark'] {
         background: #12181c;
@@ -22,23 +22,29 @@
         max-width: 960px;
         margin: 0 auto;
         padding: 24px;
+        text-align: center;
       }
       .toolbar {
         display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
         gap: 8px;
         margin-bottom: 16px;
       }
       button {
         padding: 8px 12px;
         border-radius: 8px;
-        border: 1px solid #8884;
+        border: 1px solid #8b989f66;
         background: transparent;
+        color: inherit;
         cursor: pointer;
+        font: inherit;
       }
       #chart {
         height: 520px;
-        border-radius: 12px;
-        border: 1px solid #8884;
+        border-radius: 16px;
+        border: 1px solid #8b989f55;
+        box-shadow: 0 12px 36px rgba(24, 33, 38, 0.07);
       }
       .custom-tip {
         padding: 12px;
@@ -49,7 +55,7 @@
         max-width: 280px;
       }
       .custom-tip strong {
-        color: #f2c94c;
+        color: #d0b06d;
       }
     </style>
   </head>
@@ -100,9 +106,9 @@
 
       document.getElementById('recolor').addEventListener('click', () => {
         chart.setColors({
-          center: '#ffd54f',
-          support: '#43a047',
-          attack: '#e53935',
+          center: '#92733a',
+          support: '#315f4b',
+          attack: '#874547',
         });
       });
     </script>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Argument Map — icicle layout, export &amp; share links</title>
+    <link rel="stylesheet" href="https://unpkg.com/@eledah/parto@0.1.0/dist/parto.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #f6f3ec;
+        color: #1a2328;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin-bottom: 8px;
+      }
+      p {
+        color: #5c6b73;
+        margin-bottom: 16px;
+      }
+      #chart {
+        height: 560px;
+        border: 1px solid #d8d2c8;
+        border-radius: 12px;
+        background: #fff;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      button.action {
+        font: inherit;
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid #d8d2c8;
+        background: #fff;
+        cursor: pointer;
+      }
+      button.action:hover {
+        border-color: #f2c94c;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Argument Map — icicle layout, export &amp; share links</h1>
+      <p>
+        Same debate data as the deep sunburst demo, rendered with
+        <code>layoutMode: 'icicle'</code>. Depth grows downward; narrow branches
+        still collapse into "+N" wedges.
+      </p>
+      <div class="actions">
+        <button class="action" id="dl-svg">Download SVG</button>
+        <button class="action" id="dl-png">Download PNG (2x)</button>
+        <button class="action" id="copy-link">Copy share link</button>
+      </div>
+      <div id="chart"></div>
+    </main>
+    <script src="https://unpkg.com/@eledah/parto@0.1.0/dist/parto.global.min.js"></script>
+    <script>
+      const chart = Parto.createArgumentMap('#chart', null, {
+        theme: 'auto',
+        layoutMode: 'icicle',
+        arcLabels: true,
+        ariaLabel: 'Icicle argument map about cycling infrastructure',
+      });
+
+      chart.setLoading(true);
+      fetch('../../data/deep-map.json')
+        .then((r) => {
+          if (!r.ok) throw new Error(`Failed to load map (${r.status})`);
+          return r.json();
+        })
+        .then((mapData) => {
+          chart.setLoading(false);
+          chart.setData(mapData);
+
+          // Restore focus from ?parto=<ids> if present.
+          const ids = Parto.decodeZoomPath(
+            new URLSearchParams(location.search).get(Parto.ZOOM_PARAM),
+          );
+          if (ids.length > 1) chart.zoomToPath(ids);
+        })
+        .catch((err) => {
+          chart.setLoading(false);
+          chart.showError(err.message);
+        });
+
+      function download(blob, name) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      document.getElementById('dl-svg').addEventListener('click', () => {
+        const blob = new Blob([chart.toSVG()], { type: 'image/svg+xml' });
+        download(blob, 'argument-map.svg');
+      });
+
+      document.getElementById('dl-png').addEventListener('click', async () => {
+        const blob = await chart.toPNG(2);
+        download(blob, 'argument-map.png');
+      });
+
+      document.getElementById('copy-link').addEventListener('click', async () => {
+        const url = new URL(location.href);
+        url.searchParams.set(Parto.ZOOM_PARAM, Parto.encodeZoomPath(chart.getZoomPath()));
+        await navigator.clipboard.writeText(url.toString());
+        alert('Share link copied:\n' + url.toString());
+      });
+    </script>
+  </body>
+</html>

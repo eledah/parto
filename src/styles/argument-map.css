@@ -49,40 +49,40 @@
   touch-action: manipulation;
 }
 
-.pam-chart__canvas path.pam-arc--center {
+.pam-chart__canvas .pam-arc--center {
   fill: var(--pam-center);
 }
 
-.pam-chart__canvas path.pam-arc--support {
+.pam-chart__canvas .pam-arc--support {
   fill: var(--pam-support);
 }
 
-.pam-chart__canvas path.pam-arc--attack {
+.pam-chart__canvas .pam-arc--attack {
   fill: var(--pam-attack);
 }
 
-.pam-chart__canvas path.pam-arc--collapsed {
+.pam-chart__canvas .pam-arc--collapsed {
   fill: color-mix(in srgb, var(--pam-text-muted, #5c6b73) 30%, transparent);
   stroke-dasharray: 3 2;
 }
 
-.pam-chart__canvas path.pam-arc--collapsed.pam-arc--dimmed {
+.pam-chart__canvas .pam-arc--collapsed.pam-arc--dimmed {
   opacity: 0.2 !important;
 }
 
-.pam-chart__canvas path.pam-arc--dimmed {
+.pam-chart__canvas .pam-arc--dimmed {
   opacity: 0.35 !important;
   filter: none !important;
 }
 
-.pam-chart__canvas path.pam-arc--highlighted {
+.pam-chart__canvas .pam-arc--highlighted {
   opacity: 1 !important;
 }
 
 /* Lineage highlight: ancestors of the hovered arc get a thesis-colored
    outline thread and are exempt from dimming. No glow/filter here so the
    hovered arc's treatment stays visually distinct. */
-.pam-chart__canvas path.pam-arc--ancestor {
+.pam-chart__canvas .pam-arc--ancestor {
   opacity: 1 !important;
   filter: none !important;
   stroke: var(--pam-center) !important;
@@ -99,7 +99,7 @@
   letter-spacing: 0.01em;
 }
 
-.pam-chart__canvas path:focus-visible {
+.pam-chart__canvas [role='button']:focus-visible {
   outline: 2px solid var(--pam-center);
   outline-offset: 2px;
 }

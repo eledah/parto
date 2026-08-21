@@ -24,6 +24,26 @@ export interface RingBoundaryOptions {
   minThickness?: number;
 }
 
+/**
+ * Legacy pow-curve allocation (pre-0.2 behavior), selectable via
+ * `layout.ringScale: 'exponent'`. No sliver guarantees — provided as an
+ * escape hatch and for visual comparison.
+ */
+export function legacyExponentBoundaries(
+  bandCount: number,
+  radius: number,
+  exponent: { base: number; perLevel: number },
+  depthThreshold: number,
+): number[] {
+  if (bandCount < 1 || !(radius > 0)) return [0];
+  const p = exponent.base + Math.max(0, bandCount - depthThreshold) * exponent.perLevel;
+  const bands = [0];
+  for (let d = 1; d <= bandCount + 1; d++) {
+    bands.push(radius * Math.pow(d / (bandCount + 1), p));
+  }
+  return bands;
+}
+
 const EXPONENT_MIN = 0.7;
 const EXPONENT_MAX = 2.6;
 const EXPONENT_STEP = 0.05;
@@ -106,8 +126,7 @@ function greedyFill(spans: number[], options: InternalOptions): number[] {
 export function computeRingBoundaries(
   minSpansByDepth: number[],
   options: RingBoundaryOptions,
-): number[] {
-  const radius = options.radius;
+): number[] {  const radius = options.radius;
   // minSpansByDepth[d] is the minimum pad-adjusted span at depth d; index 0 is
   // the center disc (never a sliver). Bands exist for depths 0..N, so N = len-1.
   const bandCount = minSpansByDepth.length - 1;

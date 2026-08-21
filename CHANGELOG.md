@@ -2,6 +2,23 @@
 
 ## 0.2.0 (unreleased)
 
+### Architecture & layouts (Phase 4)
+
+- **Per-instance config**: every chart resolves a frozen config snapshot at
+  construction (`resolveConfig`); colors, spacing, and layout tuning no longer
+  mutate module globals — multiple charts are fully isolated.
+  `chartConfig` remains exported (deprecated mutation target).
+- **Public layout options** via `layout`: `maxVisibleDepth`, `minAngle`,
+  `angleWeight` (0 = equal sibling angles, 1 = leaf weighting),
+  `ringScale: 'sliver-proof' | 'exponent'`, `aggregation`.
+- **Icicle layout engine**: `layoutMode: 'icicle'` renders a horizontal icicle
+  sharing the collapse/wedge pipeline, highlight semantics, labels, and
+  pan-zoom. Wedge thresholds normalized so both engines behave identically.
+- **Export & share**: `toSVG()` (standalone markup with inlined presentation),
+  `toPNG(scale)` rasterization, plus `encodeZoomPath`/`decodeZoomPath` URL
+  helpers for shareable focus state.
+- New API surface: `getConfig()`, `createRenderer`, `MapRenderer` interface.
+
 ### Navigation & interaction (Phase 3)
 
 - **Breadcrumb trail**: clickable zoom-path chips with long-trail collapsing

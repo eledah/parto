@@ -4,51 +4,48 @@ import { resolveConfig, syncColorsFromCssInto } from '../config.js';
 import type { ResolvedChartConfig } from '../config.js';
 import { getNodeArcClass, getNodeColor } from '../core/buildTree.js';
 import { applyCollapse, isWedge } from '../core/collapse.js';
-import { computeRingBoundaries, legacyExponentBoundaries } from '../core/ringLayout.js';
+import { computeRingBoundaries } from '../core/ringLayout.js';
 import { scoreFillStyle, scoreStrokeDash } from './scoreEncoding.js';
+import type { MapRenderer, MapRendererOptions } from './index.js';
 import type { TreeNode } from '../types.js';
 
 type D3Node = HierarchyRectangularNode<TreeNode>;
 type InteractionEvent = PointerEvent | FocusEvent;
+type RectSelection = d3.Selection<SVGRectElement, D3Node, SVGGElement, undefined>;
 
-export interface SunburstRendererOptions {
-  ariaLabel: string;
-  zoomEnabled: boolean;
-  /** Draw truncated titles along arcs when there is room (default false). */
-  arcLabels?: boolean;
-  onHover?: (node: TreeNode, event: InteractionEvent) => void;
-  onLeave?: () => void;
-  onClick?: (node: TreeNode, depth: number, hasChildren: boolean) => void;
-}
+const PAD_X = 1;
 
-export class SunburstRenderer {
+/**
+ * Horizontal icicle layout: depth grows downward, siblings share horizontal
+ * space. Often reads better than a sunburst for deep hierarchies; shares the
+ * collapse pipeline, wedge interaction, highlight semantics, and pan-zoom.
+ */
+export class IcicleRenderer implements MapRenderer {
   private config: ResolvedChartConfig;
   private container: HTMLElement;
   private chartRoot: HTMLElement;
   private width = 0;
   private height = 0;
-  private radius = 0;
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
-  /** Pan/zoom target group (transformed by wheel/pinch). */
   private gRoot: d3.Selection<SVGGElement, unknown, null, undefined>;
-  /** Content group, centered; arcs + labels live here. */
   private g: d3.Selection<SVGGElement, unknown, null, undefined>;
   private zoomBehavior: d3.ZoomBehavior<SVGSVGElement, unknown> | null = null;
   private partition = d3.partition<TreeNode>();
   private currentRoot: TreeNode | null = null;
   private highlightId: string | null = null;
-  /** Disabled during resize-driven renders so window dragging never tweens. */
   private animate = true;
-  private resizeObserver: ResizeObserver | null = null;
-  private options: SunburstRendererOptions;
-  private tooltipId: string;
-  /** Final angles from the last render; the tween source for transitions. */
   private prevGeometry = new Map<string, { x0: number; x1: number }>();
-  /** First touch tap shows tooltip; second tap on same arc triggers zoom. */
+  private resizeObserver: ResizeObserver | null = null;
+  private options: MapRendererOptions;
+  private tooltipId: string;
   private touchZoomPathKey: string | null = null;
   private touchOutsideHandler: ((event: PointerEvent) => void) | null = null;
 
-  constructor(container: HTMLElement, options: SunburstRendererOptions, config?: Partial<ResolvedChartConfig>) {
+  constructor(
+    container: HTMLElement,
+    options: MapRendererOptions,
+    config?: Partial<ResolvedChartConfig>,
+  ) {
     this.container = container;
     this.options = options;
     this.config = resolveConfig(config);
@@ -71,10 +68,9 @@ export class SunburstRenderer {
 
     this.gRoot = this.svg.append('g');
     this.g = this.gRoot.append('g');
-
     this.initPanZoom();
 
-    this.partition = d3.partition<TreeNode>().size([2 * Math.PI, 1]);
+    this.partition = d3.partition<TreeNode>().size([1, 1]);
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(container);
@@ -94,14 +90,9 @@ export class SunburstRenderer {
     const rect = this.container.getBoundingClientRect();
     this.width = rect.width;
     this.height = rect.height;
-    this.radius = Math.min(this.width, this.height) / 2 - this.config.chart.radiusPadding;
+    if (this.height < this.config.chart.minRadius) return;
 
-    if (this.radius < this.config.chart.minRadius) return;
-
-    this.partition.size([2 * Math.PI, 1]);
     this.svg.attr('viewBox', `0 0 ${this.width} ${this.height}`);
-    this.g.attr('transform', `translate(${this.width / 2}, ${this.height / 2})`);
-
     if (this.currentRoot) {
       const wasAnimated = this.animate;
       this.animate = false;
@@ -117,7 +108,7 @@ export class SunburstRenderer {
     this.highlightId = nodeId;
     const lineage = nodeId ? this.lineageIds(nodeId) : new Set<string>();
     this.g
-      .selectAll<SVGPathElement, D3Node>('path.pam-arc')
+      .selectAll<SVGRectElement, D3Node>('rect.pam-arc')
       .classed('pam-arc--highlighted', (d) => nodeId === d.data.id)
       .classed('pam-arc--ancestor', (d) => lineage.has(d.data.id))
       .classed('pam-arc--dimmed', (d) => {
@@ -126,17 +117,24 @@ export class SunburstRenderer {
       });
   }
 
-  /** Ids of every ancestor of the given node within the rendered hierarchy. */
-  private lineageIds(nodeId: string): Set<string> {
-    const ids = new Set<string>();
-    const target = this.g
-      .selectAll<SVGPathElement, D3Node>('path.pam-arc')
-      .data()
-      .find((d) => d.data.id === nodeId);
-    for (let p = target?.parent; p; p = p.parent) {
-      ids.add(p.data.id);
-    }
-    return ids;
+  resetView(): void {
+    if (!this.zoomBehavior) return;
+    this.svg
+      .transition()
+      .duration(this.config.chart.transitionDuration)
+      .call(this.zoomBehavior.transform, d3.zoomIdentity);
+  }
+
+  getTooltipElementId(): string {
+    return this.tooltipId;
+  }
+
+  getSVGElement(): SVGSVGElement {
+    return this.svg.node()!;
+  }
+
+  getConfig(): ResolvedChartConfig {
+    return this.config;
   }
 
   render(rootNode: TreeNode): void {
@@ -151,60 +149,26 @@ export class SunburstRenderer {
       node.children.reduce((max, child) => Math.max(max, maxDepth(child) + 1), 0);
     const safeMaxDepth = Math.max(maxDepth(rootNode), 1);
 
-    /** Angular weight of a node itself: leaves count 1, wedges count their hidden args. */
     const selfWeight = (node: TreeNode): number => {
       if (isWedge(node)) return Math.max(1, node.wedgeMeta?.count ?? 1);
       return node.children.length === 0 ? 1 : 0;
     };
 
-    const getPadAngle = (depth: number) => {
-      const depthFraction = depth / safeMaxDepth;
-      return (
-        this.config.spacing.padAngle.inner -
-        depthFraction * (this.config.spacing.padAngle.inner - this.config.spacing.padAngle.outer)
-      );
-    };
-
-    /** Partition pass returning each node's effective (pad-adjusted) visual span. */
     const layoutPass = (root: TreeNode): { hierarchy: D3Node; spans: Map<string, number> } => {
       const hierarchyRoot = d3.hierarchy(root).sum(selfWeight);
+      this.partition.size([Math.max(1, this.width), safeMaxDepth + 1]);
       this.partition(hierarchyRoot as D3Node);
-      blendAngles(hierarchyRoot as D3Node);
       const spans = new Map<string, number>();
+      const total = Math.max(this.width, 1);
       (hierarchyRoot as D3Node).each((d) => {
-        const raw = d.x1 - d.x0;
-        spans.set(d.data.pathKey, Math.max(raw - getPadAngle(d.depth), 1e-6));
+        // Normalize to circle-fraction so spacing.minAngle (radians) keeps the
+        // same meaning across sunburst and icicle engines.
+        const normalized = ((d.x1 - d.x0 - PAD_X) / total) * 2 * Math.PI;
+        spans.set(d.data.pathKey, Math.max(normalized, 1e-6));
       });
       return { hierarchy: hierarchyRoot as D3Node, spans };
     };
 
-    /**
-     * angleWeight < 1 blends the leaf-weighted partition toward equal sibling
-     * angles: x = equal + (weighted - equal) * w. At w=0 every sibling gets an
-     * identical slice; at w=1 the weighted layout stands.
-     */
-    const blendAngles = (root: D3Node): void => {
-      const w = Math.min(1, Math.max(0, this.config.layout.angleWeight));
-      if (w >= 1) return;
-      const equal = new Map<string, { x0: number; x1: number }>();
-      const walk = (node: D3Node, a0: number, a1: number): void => {
-        equal.set(node.data.pathKey, { x0: a0, x1: a1 });
-        const count = node.children?.length ?? 0;
-        if (count > 0) {
-          const span = (a1 - a0) / count;
-          node.children!.forEach((child, i) => walk(child, a0 + i * span, a0 + (i + 1) * span));
-        }
-      };
-      walk(root, 0, 2 * Math.PI);
-      root.each((node) => {
-        const eq = equal.get(node.data.pathKey);
-        if (!eq) return;
-        node.x0 = eq.x0 + (node.x0 - eq.x0) * w;
-        node.x1 = eq.x1 + (node.x1 - eq.x1) * w;
-      });
-    };
-
-    // Measurement pass on the untouched subtree decides which branches collapse.
     const measuredSpans = layoutPass(rootNode).spans;
 
     const { root: displayRoot } = this.config.layout.aggregation
@@ -215,7 +179,6 @@ export class SunburstRenderer {
         })
       : { root: rootNode };
 
-    // Final geometry pass on the collapsed tree.
     const { hierarchy: root, spans: finalSpans } = layoutPass(displayRoot);
 
     const minSpansByDepth: number[] = new Array(safeMaxDepth + 1).fill(Number.POSITIVE_INFINITY);
@@ -227,46 +190,21 @@ export class SunburstRenderer {
       minSpansByDepth[node.depth] = Math.min(minSpansByDepth[node.depth], span);
     }
 
-    const bands =
-      this.config.layout.ringScale === 'exponent'
-        ? legacyExponentBoundaries(
-            safeMaxDepth,
-            this.radius,
-            this.config.spacing.radiusExponent,
-            this.config.spacing.exponentDepthThreshold,
-          )
-        : computeRingBoundaries(minSpansByDepth, {
-            radius: this.radius,
-            centerCap: this.radius * this.config.chart.maxCenterRadius,
-            minThickness: this.radius * this.config.limits.ringMinThicknessFraction,
-          });
+    // Vertical band boundaries reuse the sliver-proof allocator with height as
+    // the "radius": shortest row segment at each depth >= row thickness.
+    const bands = computeRingBoundaries(minSpansByDepth, {
+      radius: this.height,
+      centerCap: this.height * this.config.chart.maxCenterRadius,
+      minThickness: this.height * this.config.limits.ringMinThicknessFraction,
+    });
 
-    const verticalGap = this.radius * this.config.spacing.verticalGap;
-
-    // Radius accessors are static per render; only angles change (statically or
-    // via tweens). Angle specs may be constants or per-datum accessors.
-    type AngleSpec = (d: D3Node) => number;
-    const buildArc = (getStart: AngleSpec, getEnd: AngleSpec): d3.Arc<unknown, D3Node> =>
-      d3
-        .arc<unknown, D3Node>()
-        .startAngle(getStart)
-        .endAngle(getEnd)
-        .innerRadius((d) => bands[d.depth] + verticalGap)
-        .outerRadius((d) => bands[d.depth + 1] - verticalGap)
-        .padAngle((d) => getPadAngle(d.depth))
-        .cornerRadius(this.config.chart.cornerRadius);
-    const arcFinal = buildArc(
-      (d) => d.x0,
-      (d) => d.x1,
-    );
+    const gap = this.height * this.config.spacing.verticalGap;
 
     const reducedMotion =
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const duration = this.animate === false || reducedMotion ? 0 : this.config.chart.transitionDuration;
 
-    // Tween sources: last render's finals, falling back up the tree so new
-    // subtrees grow out of their parent's previous position.
     const oldFinals = this.prevGeometry;
     const starts = new Map<string, { x0: number; x1: number }>();
     for (const node of root.descendants()) {
@@ -284,60 +222,43 @@ export class SunburstRenderer {
 
     this.g.selectAll('g.pam-labels').remove();
 
-    type ArcSelection = d3.Selection<SVGPathElement, D3Node, SVGGElement, undefined>;
     const join = this.g
-      .selectAll<SVGPathElement, D3Node>('path.pam-arc')
+      .selectAll<SVGRectElement, D3Node>('rect.pam-arc')
       .data(root.descendants(), (d) => d.data.pathKey);
 
-    const enterPaths: ArcSelection = join
+    const enterRects: RectSelection = join
       .enter()
-      .append('path')
+      .append('rect')
       .attr('class', (d) => `pam-arc ${getNodeArcClass(d.data, rootNode)}`)
-      .attr('d', (d) => {
-        const start = starts.get(d.data.pathKey)!;
-        return buildArc(
-          () => start.x0,
-          () => start.x1,
-        )(d) ?? '';
-      });
+      .attr('x', (d) => starts.get(d.data.pathKey)!.x0)
+      .attr('y', (d) => bands[d.depth]! + gap)
+      .attr('height', (d) =>
+        Math.max((bands[d.depth + 1] ?? 0) - bands[d.depth]! - 2 * gap, 0),
+      );
 
     if (duration === 0) {
       join.exit().remove();
     } else {
-      (join.exit() as unknown as ArcSelection)
+      (join.exit() as unknown as RectSelection)
         .transition()
         .duration(duration)
         .style('opacity', 0)
         .remove();
     }
 
-    const paths: ArcSelection = enterPaths.merge(join as unknown as ArcSelection);
+    const rects: RectSelection = enterRects.merge(join as unknown as RectSelection);
 
     if (duration > 0) {
-      paths
+      rects
         .transition()
         .duration(duration)
-        .attrTween('d', (d) => {
-          const start = starts.get(d.data.pathKey)!;
-          const ix0 = d3.interpolate(start.x0, d.x0);
-          const ix1 = d3.interpolate(start.x1, d.x1);
-          let a0 = start.x0;
-          let a1 = start.x1;
-          const arcAt = buildArc(
-            () => a0,
-            () => a1,
-          );
-          return (t: number) => {
-            a0 = ix0(t);
-            a1 = ix1(t);
-            return arcAt(d) ?? '';
-          };
-        });
+        .attr('x', (d) => d.x0)
+        .attr('width', (d) => Math.max(d.x1 - d.x0 - PAD_X, 0));
     } else {
-      paths.attr('d', (d) => arcFinal(d) ?? '');
+      rects.attr('x', (d) => d.x0).attr('width', (d) => Math.max(d.x1 - d.x0 - PAD_X, 0));
     }
 
-    paths
+    rects
       .attr('data-node-id', (d) => d.data.id)
       .attr('data-path-key', (d) => d.data.pathKey)
       .attr('tabindex', '0')
@@ -348,7 +269,6 @@ export class SunburstRenderer {
       .attr('aria-describedby', this.tooltipId)
       .style('stroke', colors.border)
       .style('stroke-width', this.config.chart.strokeWidth)
-      .style('stroke-linejoin', 'round')
       .style('fill', (d) => {
         if (!d.data.score) return null;
         return scoreFillStyle(d.data, getNodeColor(d.data, rootNode, colors), this.config.scoreEncoding.intensityFill);
@@ -358,16 +278,18 @@ export class SunburstRenderer {
       .classed('pam-arc--highlighted', (d) => this.highlightId === d.data.id)
       .classed('pam-arc--dimmed', (d) => this.highlightId != null && this.highlightId !== d.data.id);
 
+    if (this.options.arcLabels) {
+      this.renderLabelLayer(root, bands, gap);
+    }
+
     const showHover = (event: InteractionEvent, d: D3Node) => {
       const lineage = new Set<string>();
       for (let p = d.parent; p; p = p.parent) lineage.add(p.data.id);
-
-      paths
+      rects
         .classed('pam-arc--dimmed', (n) => n.data.id !== d.data.id && !lineage.has(n.data.id))
         .classed('pam-arc--ancestor', (n) => lineage.has(n.data.id))
         .classed('pam-arc--highlighted', (n) => n.data.id === d.data.id)
         .style('filter', function (n) {
-          // Glow belongs to the hovered arc only; ancestors stay clean.
           if (n.data.id !== d.data.id) return null;
           try {
             const nodeColor = getNodeColor(d.data, rootNode, colors);
@@ -380,7 +302,7 @@ export class SunburstRenderer {
     };
 
     const clearHover = () => {
-      paths
+      rects
         .classed('pam-arc--dimmed', false)
         .classed('pam-arc--ancestor', false)
         .classed('pam-arc--highlighted', false)
@@ -394,20 +316,13 @@ export class SunburstRenderer {
     const hasChildren = (d: D3Node): boolean =>
       (d.data.children?.length ?? 0) > 0 || isWedge(d.data);
 
-    if (this.options.arcLabels) {
-      this.renderLabelLayer(root, bands, verticalGap, getPadAngle);
-    }
-
-    const handlePointerClick = (event: PointerEvent, d: D3Node) => {
+    const handleClick = (event: PointerEvent, d: D3Node) => {
       event.stopPropagation();
-
       if (event.pointerType === 'touch') {
         if (this.touchZoomPathKey === d.data.pathKey) {
           this.touchZoomPathKey = null;
           this.unbindTouchOutsideDismiss();
-          if (this.options.zoomEnabled) {
-            this.options.onClick?.(d.data, d.depth, hasChildren(d));
-          }
+          if (this.options.zoomEnabled) this.options.onClick?.(d.data, d.depth, hasChildren(d));
         } else {
           this.touchZoomPathKey = d.data.pathKey;
           showHover(event, d);
@@ -415,13 +330,10 @@ export class SunburstRenderer {
         }
         return;
       }
-
-      if (this.options.zoomEnabled) {
-        this.options.onClick?.(d.data, d.depth, hasChildren(d));
-      }
+      if (this.options.zoomEnabled) this.options.onClick?.(d.data, d.depth, hasChildren(d));
     };
 
-    paths
+    rects
       .on('pointerenter', (event: PointerEvent, d) => {
         if (event.pointerType === 'touch') return;
         showHover(event, d);
@@ -434,32 +346,65 @@ export class SunburstRenderer {
         if (event.pointerType === 'touch') return;
         clearHover();
       })
-      .on('focus', (event: FocusEvent, d) => showHover(event, d))
+      .on('focus', (_event: FocusEvent, d) => showHover({ type: 'focus' } as FocusEvent, d))
       .on('blur', () => clearHover())
-      .on('click', (event: PointerEvent, d) => handlePointerClick(event, d))
+      .on('click', (event: PointerEvent, d) => handleClick(event, d))
       .on('keydown', (event, d) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          if (this.options.zoomEnabled) {
-            this.options.onClick?.(d.data, d.depth, hasChildren(d));
-          }
+          if (this.options.zoomEnabled) this.options.onClick?.(d.data, d.depth, hasChildren(d));
         }
       });
   }
 
-  getTooltipElementId(): string {
-    return this.tooltipId;
+  /** In-band horizontal labels; drawn only when the cell has room. */
+  private renderLabelLayer(root: D3Node, bands: number[], gap: number): void {
+    const fontSize = this.config.labels.fontSize;
+    const charWidth = fontSize * 0.56;
+
+    const layer = this.g
+      .append('g')
+      .attr('class', 'pam-labels')
+      .attr('pointer-events', 'none')
+      .attr('aria-hidden', 'true');
+
+    for (const d of root.descendants()) {
+      if (d.depth === 0) continue;
+      const inner = bands[d.depth];
+      const outer = bands[d.depth + 1];
+      if (inner === undefined || outer === undefined || !(outer > inner)) continue;
+
+      const width = d.x1 - d.x0 - PAD_X;
+      const thickness = outer - inner - 2 * gap;
+      if (!(width > 6 * charWidth) || !(thickness > fontSize * 1.25)) continue;
+
+      let title = d.data.title.trim();
+      if (!title) continue;
+      const maxChars = Math.floor(width / charWidth) - 1;
+      if (title.length > maxChars) {
+        title = `${title.slice(0, Math.max(1, maxChars - 1)).trimEnd()}…`;
+      }
+
+      layer
+        .append('text')
+        .attr('x', d.x0 + 6)
+        .attr('y', (inner + outer) / 2)
+        .attr('dominant-baseline', 'central')
+        .attr('font-size', String(fontSize))
+        .text(title);
+    }
   }
 
-  getSVGElement(): SVGSVGElement {
-    return this.svg.node()!;
+  private lineageIds(nodeId: string): Set<string> {
+    const ids = new Set<string>();
+    const target = this.g
+      .selectAll<SVGRectElement, D3Node>('rect.pam-arc')
+      .data()
+      .find((d) => d.data.id === nodeId);
+    for (let p = target?.parent; p; p = p.parent) ids.add(p.data.id);
+    return ids;
   }
 
-  getConfig(): ResolvedChartConfig {
-    return this.config;
-  }
-
-  /** Wheel/pinch viewport pan-zoom, scoped so double-click stays free for focus. */
   private initPanZoom(): void {
     const [minScale, maxScale] = this.config.ui.scaleExtent;
     this.zoomBehavior = d3
@@ -476,88 +421,6 @@ export class SunburstRenderer {
         );
       });
     this.svg.call(this.zoomBehavior).on('dblclick.zoom', null);
-  }
-
-  /** Animate the viewport back to identity. */
-  resetView(): void {
-    if (!this.zoomBehavior) return;
-    this.svg
-      .transition()
-      .duration(this.config.chart.transitionDuration)
-      .call(this.zoomBehavior.transform, d3.zoomIdentity);
-  }
-
-  /**
-   * Opt-in on-arc titles. A label is drawn only when the arc's span and ring
-   * thickness leave room; otherwise it fades out entirely (never squished).
-   */
-  private renderLabelLayer(
-    root: D3Node,
-    bands: number[],
-    verticalGap: number,
-    getPadAngle: (depth: number) => number,
-  ): void {
-    const fontSize = this.config.labels.fontSize;
-    const minAngle = this.config.labels.minLabelAngle;
-    const charWidth = fontSize * 0.56;
-
-    const layer = this.g
-      .append('g')
-      .attr('class', 'pam-labels')
-      .attr('pointer-events', 'none')
-      .attr('aria-hidden', 'true');
-
-    let seq = 0;
-    for (const d of root.descendants()) {
-      if (d.depth === 0) continue;
-      const inner = bands[d.depth];
-      const outer = bands[d.depth + 1];
-      if (inner === undefined || outer === undefined || !(outer > inner)) continue;
-
-      const span = d.x1 - d.x0 - getPadAngle(d.depth);
-      const thickness = outer - inner - 2 * verticalGap;
-      if (!(span >= minAngle) || !(thickness > fontSize * 1.25)) continue;
-
-      const rMid = (inner + outer) / 2;
-      const arcLength = span * rMid;
-      const maxChars = Math.floor(arcLength / charWidth);
-      if (!(maxChars >= 2)) continue;
-
-      let title = d.data.title.trim();
-      if (!title) continue;
-      if (title.length > maxChars) {
-        title = `${title.slice(0, Math.max(1, maxChars - 1)).trimEnd()}…`;
-      }
-
-      // Flip the guide path on the bottom half so glyphs stay upright.
-      const mid = ((d.x0 + d.x1) / 2) % (2 * Math.PI);
-      const flip = mid > Math.PI / 2 && mid < (3 * Math.PI) / 2;
-      const a0 = flip ? d.x1 : d.x0;
-      const a1 = flip ? d.x0 : d.x1;
-      const largeArc = Math.abs(a1 - a0) > Math.PI ? 1 : 0;
-      const pt = (angle: number): [number, number] => [
-        rMid * Math.sin(angle),
-        -rMid * Math.cos(angle),
-      ];
-      const [x0, y0] = pt(a0);
-      const [x1, y1] = pt(a1);
-
-      const pathId = `pam-lbl-${seq++}`;
-      layer
-        .append('path')
-        .attr('id', pathId)
-        .attr('d', `M ${x0} ${y0} A ${rMid} ${rMid} 0 ${largeArc} ${flip ? 0 : 1} ${x1} ${y1}`)
-        .attr('fill', 'none');
-
-      layer
-        .append('text')
-        .attr('font-size', String(fontSize))
-        .append('textPath')
-        .attr('href', `#${pathId}`)
-        .attr('startOffset', '50%')
-        .attr('text-anchor', 'middle')
-        .text(title);
-    }
   }
 
   private bindTouchOutsideDismiss(onDismiss: () => void): void {

@@ -86,6 +86,21 @@ export type TooltipRenderer = (
   labels: ArgumentMapLabels,
 ) => HTMLElement;
 
+export type RingScaleMode = 'sliver-proof' | 'exponent';
+
+export interface ArgumentMapLayoutOptions {
+  /** Depth beyond which the chart auto-focuses into the heaviest branch (default 4). */
+  maxVisibleDepth?: number;
+  /** Angular span (radians) below which branches collapse into "+N" wedges. */
+  minAngle?: number;
+  /** 0 = equal sibling angles, 1 = pure leaf weighting (default 1). */
+  angleWeight?: number;
+  /** Radial allocation strategy (default 'sliver-proof'). */
+  ringScale?: RingScaleMode;
+  /** Enable "+N" collapse wedges (default true). */
+  aggregation?: boolean;
+}
+
 export interface ArgumentMapOptions {
   theme?: ThemeMode;
   colors?: Partial<ArgumentMapColors>;
@@ -97,6 +112,10 @@ export interface ArgumentMapOptions {
   breadcrumb?: boolean;
   /** Show center/support/attack legend chips (default: true). */
   legend?: boolean;
+  /** Layout engine tuning (angles, rings, collapse, auto-focus depth). */
+  layout?: ArgumentMapLayoutOptions;
+  /** Visual layout engine (default 'sunburst'). */
+  layoutMode?: 'sunburst' | 'icicle';
   direction?: Direction;
   lang?: string;
   labels?: Partial<ArgumentMapLabels>;
@@ -122,4 +141,10 @@ export interface ArgumentMapChart {
   resize(): void;
   destroy(): void;
   getZoomPath(): NodeContext[];
+  /** The resolved per-instance configuration (colors, layout tuning, ...). */
+  getConfig(): import('./config.js').ResolvedChartConfig;
+  /** Standalone SVG markup of the current view (styles inlined). */
+  toSVG(): string;
+  /** PNG rasterization of toSVG() at the given scale (default 2x). */
+  toPNG(scale?: number): Promise<Blob>;
 }

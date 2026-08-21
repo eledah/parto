@@ -7,17 +7,20 @@ import type { TreeNode } from '../types.js';
  * class-based colors and never affect tooltips.
  */
 
-export function scoreFillStyle(node: TreeNode, color: string): string | null {
+export function scoreFillStyle(
+  node: TreeNode,
+  color: string,
+  range: { min: number; max: number } = chartConfig.scoreEncoding.intensityFill,
+): string | null {
   if (!node.score || !color) return null;
-  const { min, max } = chartConfig.scoreEncoding.intensityFill;
   const intensity = clamp01(node.score.intensity);
-  const pct = Math.round(min + (max - min) * intensity);
+  const pct = Math.round(range.min + (range.max - range.min) * intensity);
   return `color-mix(in srgb, ${color} ${pct}%, var(--pam-surface, #ffffff))`;
 }
 
-export function scoreStrokeDash(node: TreeNode): string | null {
+export function scoreStrokeDash(node: TreeNode, threshold = chartConfig.scoreEncoding.confidenceDashedBelow): string | null {
   if (!node.score) return null;
-  return node.score.confidence < chartConfig.scoreEncoding.confidenceDashedBelow ? '4 3' : null;
+  return node.score.confidence < threshold ? '4 3' : null;
 }
 
 function clamp01(value: number): number {

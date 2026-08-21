@@ -1,20 +1,22 @@
 import {
-  applyColorOverrides,
-  chartConfig,
+  applyColorOverridesInto,
   DEFAULT_COLORS,
   DEFAULT_LABELS,
-  syncColorsFromCss,
+  resolveConfig,
+  syncColorsFromCssInto,
 } from './config.js';
+import type { ResolvedChartConfig } from './config.js';
 import { buildTree } from './core/buildTree.js';
 import { validateMapData } from './core/validateMapData.js';
 import { ZoomController } from './core/ZoomController.js';
-import { SunburstRenderer } from './render/SunburstRenderer.js';
+import { createRenderer, type MapRenderer } from './render/index.js';
 import { createDefaultTooltip, TooltipController } from './ui/TooltipController.js';
 import { ChartStatusOverlay } from './ui/ChartStatus.js';
 import { BreadcrumbBar } from './ui/BreadcrumbBar.js';
 import { LegendChips } from './ui/LegendChips.js';
 import { ZoomControls } from './ui/ZoomControls.js';
 import { ValidationError } from './errors.js';
+import { backgroundColorOf, rasterizeToPng, serializeChartSVG } from './core/exportImage.js';
 import type {
   ArgumentMapChart,
   ArgumentMapColors,
@@ -43,7 +45,8 @@ function mergeLabels(partial?: Partial<ArgumentMapLabels>): ArgumentMapLabels {
 class ArgumentMapChartImpl implements ArgumentMapChart {
   private container: HTMLElement;
   private zoom = new ZoomController();
-  private renderer: SunburstRenderer;
+  private config: ResolvedChartConfig;
+  private renderer: MapRenderer;
   private tooltip: TooltipController | null = null;
   private options: Required<
     Pick<ArgumentMapOptions, 'theme' | 'zoom' | 'direction' | 'lang' | 'ariaLabel'>
@@ -52,6 +55,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
     arcLabels: boolean;
     breadcrumb: boolean;
     legend: boolean;
+    layoutMode: 'sunburst' | 'icicle';
     labels: ArgumentMapLabels;
     onNodeHover?: ArgumentMapOptions['onNodeHover'];
     onNodeLeave?: ArgumentMapOptions['onNodeLeave'];
@@ -94,6 +98,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
       arcLabels: options.arcLabels ?? false,
       breadcrumb: options.breadcrumb ?? true,
       legend: options.legend ?? true,
+      layoutMode: options.layoutMode ?? 'sunburst',
       labels: mergeLabels(options.labels),
       onNodeHover: options.onNodeHover,
       onNodeLeave: options.onNodeLeave,
@@ -102,8 +107,18 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
       onWarning: options.onWarning,
     };
 
+    this.config = resolveConfig({
+      limits: { autoFocusDepth: options.layout?.maxVisibleDepth },
+      spacing: { minAngle: options.layout?.minAngle },
+      layout: {
+        angleWeight: options.layout?.angleWeight,
+        ringScale: options.layout?.ringScale,
+        aggregation: options.layout?.aggregation,
+      },
+    });
+
     if (options.colors) {
-      applyColorOverrides(this.container, options.colors);
+      applyColorOverridesInto(this.container, options.colors, this.config.colors);
     }
 
     this.status = new ChartStatusOverlay(this.container, {
@@ -112,14 +127,14 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
       error: this.options.labels.statusError,
     });
 
-    this.renderer = new SunburstRenderer(this.container, {
+    this.renderer = createRenderer(this.container, {
       ariaLabel: this.options.ariaLabel,
       zoomEnabled: this.options.zoom,
       arcLabels: this.options.arcLabels,
       onHover: (node, event) => this.handleHover(node, event),
       onLeave: () => this.handleLeave(),
       onClick: (node, depth, hasChildren) => this.handleClick(node, depth, hasChildren),
-    });
+    }, this.config, this.options.layoutMode);
 
     if (this.options.tooltip !== false) {
       const renderer =
@@ -161,7 +176,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
 
       this.status.hide();
       this.zoom.setTree(tree);
-      this.zoom.autoFocusDeep(chartConfig.limits.autoFocusDepth);
+      this.zoom.autoFocusDeep(this.config.limits.autoFocusDepth);
       this.render();
       this.emitZoomChange();
     } catch (err) {
@@ -197,13 +212,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
   }
 
   setColors(colors: Partial<ArgumentMapColors>): void {
-    applyColorOverrides(this.container, {
-      center: colors.center,
-      support: colors.support,
-      attack: colors.attack,
-      border: colors.border,
-    });
-    syncColorsFromCss(this.container);
+    applyColorOverridesInto(this.container, colors, this.config.colors);
     const focus = this.zoom.getFocusRoot();
     if (focus) this.renderer.render(focus);
   }
@@ -245,6 +254,22 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
 
   getZoomPath(): NodeContext[] {
     return this.zoom.getZoomPath();
+  }
+
+  getConfig(): ResolvedChartConfig {
+    return this.config;
+  }
+
+  toSVG(): string {
+    return serializeChartSVG(this.renderer.getSVGElement(), backgroundColorOf(this.container));
+  }
+
+  async toPNG(scale = 2): Promise<Blob> {
+    const svgEl = this.renderer.getSVGElement();
+    const vb = svgEl.viewBox.baseVal;
+    const width = vb.width || svgEl.clientWidth || 800;
+    const height = vb.height || svgEl.clientHeight || 600;
+    return rasterizeToPng(this.toSVG(), width, height, scale);
   }
 
   destroy(): void {
@@ -319,7 +344,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
   }
 
   private syncOverlayVisibility(): void {
-    const wideEnough = this.container.clientWidth >= chartConfig.ui.minOverlayWidth;
+    const wideEnough = this.container.clientWidth >= this.config.ui.minOverlayWidth;
     this.breadcrumbs?.setVisible(wideEnough);
     this.controls?.setVisible(wideEnough);
     this.legend?.setVisible(wideEnough);
@@ -349,11 +374,8 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
 
     const setResolved = (resolved: 'light' | 'dark') => {
       this.container.classList.add(resolved === 'light' ? 'pam-chart--light' : 'pam-chart--dark');
-      chartConfig.colors.center = DEFAULT_COLORS.center;
-      chartConfig.colors.support = DEFAULT_COLORS.support;
-      chartConfig.colors.attack = DEFAULT_COLORS.attack;
-      chartConfig.colors.border = DEFAULT_COLORS.border;
-      syncColorsFromCss(this.container);
+      Object.assign(this.config.colors, DEFAULT_COLORS);
+      syncColorsFromCssInto(this.container, this.config.colors);
       const focus = this.zoom.getFocusRoot();
       if (focus) this.renderer.render(focus);
     };

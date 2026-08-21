@@ -9,6 +9,9 @@
 - Hover tooltips and click-to-zoom
 - Deep-map friendly: leaf-weighted angles, sliver-proof ring sizing, "+N" collapse wedges, auto-focus into the heaviest branch
 - Built-in navigation: breadcrumb trail, zoom controls, legend chips, wheel/pinch pan-zoom, animated zoom transitions
+- Two layout engines: sunburst (default) or icicle — `layoutMode: 'icicle'`
+- Export the current view to standalone SVG/PNG; share focus via URL param helpers
+- Per-instance configuration: multiple charts never share state
 - ESM for bundlers + CDN global bundle for plain HTML
 
 ## Install
@@ -44,6 +47,8 @@ const chart = createArgumentMap('#chart', mapData, {
 | `arcLabels` | `false` | Truncated titles along arcs where they fit |
 | `breadcrumb` | `true` | Clickable trail of the current zoom path |
 | `legend` | `true` | Color key chips (hidden on narrow containers) |
+| `layoutMode` | `'sunburst'` | `'sunburst'` \| `'icicle'` visual engine |
+| `layout` | — | Tuning: `maxVisibleDepth`, `minAngle`, `angleWeight` (0–1), `ringScale`, `aggregation` |
 | `direction` / `lang` | inherit | RTL support and content language |
 | `labels` | English | All UI strings incl. status overlays |
 | `onNodeHover` / `onNodeLeave` / `onNodeClick` / `onZoomChange` / `onWarning` | — | Event hooks |
@@ -199,6 +204,7 @@ Local copies in `examples/` (run `npm run build` first, or serve with any static
 - `examples/04-fetch-json` — load map data from a JSON file
 - `examples/05-deep-map` — 7-level map exercising auto-focus and "+N" collapse wedges
 - `examples/06-arc-labels` — opt-in `arcLabels` flag, score encoding, lineage highlight
+- `examples/07-icicle-export` — icicle layout, SVG/PNG export, share links
 
 ## How deep maps stay readable
 
@@ -224,6 +230,22 @@ cramming everything into one view (`Esc` / `Backspace` / center-click zoom out).
   thread — the hovered arc keeps its own glow, ancestors never do.
 - **`arcLabels: true`** draws truncated titles along arcs when there is room
   (off by default; see `examples/06-arc-labels`).
+
+## Exporting and sharing
+
+```js
+const blob = await chart.toPNG(2);          // raster export
+downloadBlob(blob, 'map.png');
+const svg = chart.toSVG();                  // standalone vector markup
+
+// Share the current focus as a URL parameter:
+url.searchParams.set('parto', encodeZoomPath(chart.getZoomPath()));
+// ...and restore it later:
+chart.zoomToPath(decodeZoomPath(params.get('parto')));
+```
+
+Each instance resolves its own config snapshot (`chart.getConfig()`), so two
+charts on one page can carry different colors and layout tuning safely.
 
 ## Publish
 

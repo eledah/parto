@@ -178,6 +178,7 @@ Local copies in `examples/` (run `npm run build` first, or serve with any static
 - `examples/03-esm-rtl` — ESM import with Persian/RTL data
 - `examples/04-fetch-json` — load map data from a JSON file
 - `examples/05-deep-map` — 7-level map exercising auto-focus and "+N" collapse wedges
+- `examples/06-arc-labels` — opt-in `arcLabels` flag, score encoding, lineage highlight
 
 ## How deep maps stay readable
 
@@ -194,6 +195,15 @@ Argument maps grow fast. Parto keeps deep maps legible with three layout rules:
 
 Maps deeper than four levels open focused on their heaviest branch instead of
 cramming everything into one view (`Esc` / `Backspace` / center-click zoom out).
+
+## Reading scores and lineage at a glance
+
+- **Intensity** fades a claim's fill (low intensity washes toward the surface color).
+- **Confidence** below 0.5 switches the border to a dashed pattern.
+- **Hovering** an arc lights its full lineage from the thesis with a yellow
+  thread — the hovered arc keeps its own glow, ancestors never do.
+- **`arcLabels: true`** draws truncated titles along arcs when there is room
+  (off by default; see `examples/06-arc-labels`).
 
 ## Publish
 

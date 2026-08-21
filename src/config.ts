@@ -52,6 +52,18 @@ export const chartConfig = {
     /** Minimum band thickness as a fraction of the chart radius. */
     ringMinThicknessFraction: 0.012,
   },
+  labels: {
+    /** Minimum angular span (radians) before an on-arc label is drawn. */
+    minLabelAngle: 0.09,
+    /** On-arc label font size in px (also drives fit checks and truncation). */
+    fontSize: 11,
+  },
+  scoreEncoding: {
+    /** Confidence below this renders a dashed border. */
+    confidenceDashedBelow: 0.5,
+    /** Fill saturation range mapped from intensity (percent mixed with surface). */
+    intensityFill: { min: 45, max: 95 },
+  },
 };
 
 const CSS_COLOR_VARS: Record<string, string> = {

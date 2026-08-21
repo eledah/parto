@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Argument Map — on-arc labels</title>
+    <link rel="stylesheet" href="../../dist/parto.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #f6f3ec;
+        color: #1a2328;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin-bottom: 8px;
+      }
+      p {
+        color: #5c6b73;
+        margin-bottom: 16px;
+      }
+      #chart {
+        height: 560px;
+        border: 1px solid #d8d2c8;
+        border-radius: 12px;
+        background: #fff;
+      }
+      code {
+        background: #efe9dd;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Argument Map — on-arc labels (<code>arcLabels: true</code>)</h1>
+      <p>
+        Titles are drawn along arcs when there is room, flipped upright on the bottom
+        half and truncated with an ellipsis when narrow. The flag is opt-in because
+        dense maps read better without labels. Faded fills encode argument
+        <em>intensity</em>; dashed borders flag low <em>confidence</em>. Hover any arc
+        to see its lineage thread back to the thesis.
+      </p>
+      <div id="chart"></div>
+    </main>
+    <script src="../../dist/parto.global.min.js"></script>
+    <script>
+      const mapData = {
+        new_nodes: [
+          {
+            id: 'T',
+            type: 'thesis',
+            title: 'Remote work increases productivity',
+            description: 'Employees perform better with flexible schedules.',
+            quote: '',
+            speaker: 'Moderator',
+            relations: [],
+          },
+          {
+            id: 'S1',
+            type: 'claim',
+            title: 'Fewer commute hours',
+            description: 'Time saved becomes focused work.',
+            quote: '',
+            speaker: 'Alex',
+            score: { intensity: 0.85, confidence: 0.8 },
+            relations: [{ target_node_id: 'T', relation_type: 'support', reasoning: 'Less fatigue.' }],
+          },
+          {
+            id: 'S1a',
+            type: 'claim',
+            title: 'Deep work blocks',
+            description: 'Recovered hours become uninterrupted focus time.',
+            quote: '',
+            speaker: 'Alex',
+            score: { intensity: 0.7, confidence: 0.75 },
+            relations: [{ target_node_id: 'S1', relation_type: 'support', reasoning: '' }],
+          },
+          {
+            id: 'S2',
+            type: 'claim',
+            title: 'Flexible schedules',
+            description: 'People work during their peak hours.',
+            quote: '',
+            speaker: 'Riley',
+            score: { intensity: 0.6, confidence: 0.4 },
+            relations: [{ target_node_id: 'T', relation_type: 'support', reasoning: 'Chronotype alignment.' }],
+          },
+          {
+            id: 'A1',
+            type: 'claim',
+            title: 'Collaboration suffers online',
+            description: 'Spontaneous brainstorming is harder remotely.',
+            quote: '',
+            speaker: 'Jordan',
+            score: { intensity: 0.75, confidence: 0.65 },
+            relations: [{ target_node_id: 'T', relation_type: 'attack', reasoning: 'Serendipity needs co-location.' }],
+          },
+          {
+            id: 'A2',
+            type: 'claim',
+            title: 'Distractions at home',
+            description: 'Households are not designed offices.',
+            quote: '',
+            speaker: 'Casey',
+            relations: [{ target_node_id: 'T', relation_type: 'attack', reasoning: 'Environment shapes output.' }],
+          },
+        ],
+      };
+
+      Parto.createArgumentMap('#chart', mapData, {
+        theme: 'auto',
+        arcLabels: true,
+        ariaLabel: 'Argument map with on-arc labels',
+      });
+    </script>
+  </body>
+</html>

@@ -2,6 +2,19 @@
 
 ## 0.2.0 (unreleased)
 
+### Readability (Phase 2)
+
+- **Lineage highlight**: hovering or focusing an arc lights its ancestor chain
+  from the thesis with a distinct accent outline; ancestors are exempt from
+  dimming and never receive the hover glow. `highlight()` applies the same
+  lineage treatment.
+- **Score encoding**: argument intensity modulates fill saturation; confidence
+  below 0.5 renders a dashed border. Tooltips unchanged.
+- **Opt-in on-arc labels** (`arcLabels`, default off): truncated titles along a
+  mid-band guide path, flipped upright on the lower half, drawn only when the
+  arc has room for them.
+- New option: `arcLabels?: boolean`; new example `examples/06-arc-labels`.
+
 ### Layout engine (deep maps)
 
 - **Leaf-weighted angles**: arc width now reflects subtree size (descendant leaf

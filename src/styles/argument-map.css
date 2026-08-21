@@ -79,6 +79,26 @@
   opacity: 1 !important;
 }
 
+/* Lineage highlight: ancestors of the hovered arc get a thesis-colored
+   outline thread and are exempt from dimming. No glow/filter here so the
+   hovered arc's treatment stays visually distinct. */
+.pam-chart__canvas path.pam-arc--ancestor {
+  opacity: 1 !important;
+  filter: none !important;
+  stroke: var(--pam-center) !important;
+  stroke-width: 1.75px !important;
+}
+
+.pam-chart__canvas .pam-labels text {
+  fill: var(--pam-text, #1a2328);
+  paint-order: stroke;
+  stroke: var(--pam-surface, #fff);
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
 .pam-chart__canvas path:focus-visible {
   outline: 2px solid var(--pam-center);
   outline-offset: 2px;

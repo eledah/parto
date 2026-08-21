@@ -46,6 +46,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
     Pick<ArgumentMapOptions, 'theme' | 'zoom' | 'direction' | 'lang' | 'ariaLabel'>
   > & {
     tooltip: boolean | TooltipRenderer;
+    arcLabels: boolean;
     labels: ArgumentMapLabels;
     onNodeHover?: ArgumentMapOptions['onNodeHover'];
     onNodeLeave?: ArgumentMapOptions['onNodeLeave'];
@@ -81,6 +82,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
       lang: options.lang ?? 'en',
       ariaLabel: options.ariaLabel ?? 'Argument map chart',
       tooltip: options.tooltip ?? true,
+      arcLabels: options.arcLabels ?? false,
       labels: mergeLabels(options.labels),
       onNodeHover: options.onNodeHover,
       onNodeLeave: options.onNodeLeave,
@@ -102,6 +104,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
     this.renderer = new SunburstRenderer(this.container, {
       ariaLabel: this.options.ariaLabel,
       zoomEnabled: this.options.zoom,
+      arcLabels: this.options.arcLabels,
       onHover: (node, event) => this.handleHover(node, event),
       onLeave: () => this.handleLeave(),
       onClick: (node, depth, hasChildren) => this.handleClick(node, depth, hasChildren),

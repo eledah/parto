@@ -87,6 +87,8 @@ export interface ArgumentMapOptions {
   colors?: Partial<ArgumentMapColors>;
   tooltip?: boolean | TooltipRenderer;
   zoom?: boolean;
+  /** Render truncated titles along arcs when there is room (default: false). */
+  arcLabels?: boolean;
   direction?: Direction;
   lang?: string;
   labels?: Partial<ArgumentMapLabels>;

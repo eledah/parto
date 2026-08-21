@@ -4,6 +4,7 @@ import { chartConfig, syncColorsFromCss } from '../config.js';
 import { getNodeArcClass, getNodeColor } from '../core/buildTree.js';
 import { applyCollapse, isWedge } from '../core/collapse.js';
 import { computeRingBoundaries } from '../core/ringLayout.js';
+import { scoreFillStyle, scoreStrokeDash } from './scoreEncoding.js';
 import type { TreeNode } from '../types.js';
 
 type D3Node = HierarchyRectangularNode<TreeNode>;
@@ -12,6 +13,8 @@ type InteractionEvent = PointerEvent | FocusEvent;
 export interface SunburstRendererOptions {
   ariaLabel: string;
   zoomEnabled: boolean;
+  /** Draw truncated titles along arcs when there is room (default false). */
+  arcLabels?: boolean;
   onHover?: (node: TreeNode, event: InteractionEvent) => void;
   onLeave?: () => void;
   onClick?: (node: TreeNode, depth: number, hasChildren: boolean) => void;
@@ -99,10 +102,28 @@ export class SunburstRenderer {
 
   setHighlight(nodeId: string | null): void {
     this.highlightId = nodeId;
+    const lineage = nodeId ? this.lineageIds(nodeId) : new Set<string>();
     this.g
       .selectAll<SVGPathElement, D3Node>('path')
       .classed('pam-arc--highlighted', (d) => nodeId === d.data.id)
-      .classed('pam-arc--dimmed', (d) => nodeId != null && nodeId !== d.data.id);
+      .classed('pam-arc--ancestor', (d) => lineage.has(d.data.id))
+      .classed('pam-arc--dimmed', (d) => {
+        if (nodeId == null) return false;
+        return nodeId !== d.data.id && !lineage.has(d.data.id);
+      });
+  }
+
+  /** Ids of every ancestor of the given node within the rendered hierarchy. */
+  private lineageIds(nodeId: string): Set<string> {
+    const ids = new Set<string>();
+    const target = this.g
+      .selectAll<SVGPathElement, D3Node>('path')
+      .data()
+      .find((d) => d.data.id === nodeId);
+    for (let p = target?.parent; p; p = p.parent) {
+      ids.add(p.data.id);
+    }
+    return ids;
   }
 
   render(rootNode: TreeNode): void {
@@ -198,27 +219,42 @@ export class SunburstRenderer {
       .style('stroke', colors.border)
       .style('stroke-width', chartConfig.chart.strokeWidth)
       .style('stroke-linejoin', 'round')
+      .style('fill', (d) => {
+        if (!d.data.score) return null;
+        return scoreFillStyle(d.data, getNodeColor(d.data, rootNode, colors));
+      })
+      .style('stroke-dasharray', (d) => scoreStrokeDash(d.data))
       .style('cursor', this.options.zoomEnabled ? 'pointer' : 'default')
       .classed('pam-arc--highlighted', (d) => this.highlightId === d.data.id)
       .classed('pam-arc--dimmed', (d) => this.highlightId != null && this.highlightId !== d.data.id);
 
     const showHover = (event: InteractionEvent, d: D3Node) => {
-      paths.classed('pam-arc--dimmed', (n) => n.data.id !== d.data.id);
-      paths.classed('pam-arc--highlighted', (n) => n.data.id === d.data.id);
-      try {
-        const nodeColor = getNodeColor(d.data, rootNode, colors);
-        d3.select(event.currentTarget as Element).style(
-          'filter',
-          `brightness(${d.depth === 0 ? 1.05 : 1.2}) drop-shadow(0 0 10px ${nodeColor})`,
-        );
-      } catch {
-        /* ignore filter errors */
-      }
+      const lineage = new Set<string>();
+      for (let p = d.parent; p; p = p.parent) lineage.add(p.data.id);
+
+      paths
+        .classed('pam-arc--dimmed', (n) => n.data.id !== d.data.id && !lineage.has(n.data.id))
+        .classed('pam-arc--ancestor', (n) => lineage.has(n.data.id))
+        .classed('pam-arc--highlighted', (n) => n.data.id === d.data.id)
+        .style('filter', function (n) {
+          // Glow belongs to the hovered arc only; ancestors stay clean.
+          if (n.data.id !== d.data.id) return null;
+          try {
+            const nodeColor = getNodeColor(d.data, rootNode, colors);
+            return `brightness(${d.depth === 0 ? 1.05 : 1.2}) drop-shadow(0 0 10px ${nodeColor})`;
+          } catch {
+            return null;
+          }
+        });
       this.options.onHover?.(d.data, event);
     };
 
     const clearHover = () => {
-      paths.classed('pam-arc--dimmed', false).classed('pam-arc--highlighted', false).style('filter', 'none');
+      paths
+        .classed('pam-arc--dimmed', false)
+        .classed('pam-arc--ancestor', false)
+        .classed('pam-arc--highlighted', false)
+        .style('filter', null);
       if (this.highlightId) {
         this.setHighlight(this.highlightId);
       }
@@ -227,6 +263,10 @@ export class SunburstRenderer {
 
     const hasChildren = (d: D3Node): boolean =>
       (d.data.children?.length ?? 0) > 0 || isWedge(d.data);
+
+    if (this.options.arcLabels) {
+      this.renderLabelLayer(root, bands, verticalGap, getPadAngle);
+    }
 
     const handlePointerClick = (event: PointerEvent, d: D3Node) => {
       event.stopPropagation();
@@ -279,6 +319,79 @@ export class SunburstRenderer {
 
   getTooltipElementId(): string {
     return this.tooltipId;
+  }
+
+  /**
+   * Opt-in on-arc titles. A label is drawn only when the arc's span and ring
+   * thickness leave room; otherwise it fades out entirely (never squished).
+   */
+  private renderLabelLayer(
+    root: D3Node,
+    bands: number[],
+    verticalGap: number,
+    getPadAngle: (depth: number) => number,
+  ): void {
+    const fontSize = chartConfig.labels.fontSize;
+    const minAngle = chartConfig.labels.minLabelAngle;
+    const charWidth = fontSize * 0.56;
+
+    const layer = this.g
+      .append('g')
+      .attr('class', 'pam-labels')
+      .attr('pointer-events', 'none')
+      .attr('aria-hidden', 'true');
+
+    let seq = 0;
+    for (const d of root.descendants()) {
+      if (d.depth === 0) continue;
+      const inner = bands[d.depth];
+      const outer = bands[d.depth + 1];
+      if (inner === undefined || outer === undefined || !(outer > inner)) continue;
+
+      const span = d.x1 - d.x0 - getPadAngle(d.depth);
+      const thickness = outer - inner - 2 * verticalGap;
+      if (!(span >= minAngle) || !(thickness > fontSize * 1.25)) continue;
+
+      const rMid = (inner + outer) / 2;
+      const arcLength = span * rMid;
+      const maxChars = Math.floor(arcLength / charWidth);
+      if (!(maxChars >= 2)) continue;
+
+      let title = d.data.title.trim();
+      if (!title) continue;
+      if (title.length > maxChars) {
+        title = `${title.slice(0, Math.max(1, maxChars - 1)).trimEnd()}…`;
+      }
+
+      // Flip the guide path on the bottom half so glyphs stay upright.
+      const mid = ((d.x0 + d.x1) / 2) % (2 * Math.PI);
+      const flip = mid > Math.PI / 2 && mid < (3 * Math.PI) / 2;
+      const a0 = flip ? d.x1 : d.x0;
+      const a1 = flip ? d.x0 : d.x1;
+      const largeArc = Math.abs(a1 - a0) > Math.PI ? 1 : 0;
+      const pt = (angle: number): [number, number] => [
+        rMid * Math.sin(angle),
+        -rMid * Math.cos(angle),
+      ];
+      const [x0, y0] = pt(a0);
+      const [x1, y1] = pt(a1);
+
+      const pathId = `pam-lbl-${seq++}`;
+      layer
+        .append('path')
+        .attr('id', pathId)
+        .attr('d', `M ${x0} ${y0} A ${rMid} ${rMid} 0 ${largeArc} ${flip ? 0 : 1} ${x1} ${y1}`)
+        .attr('fill', 'none');
+
+      layer
+        .append('text')
+        .attr('font-size', String(fontSize))
+        .append('textPath')
+        .attr('href', `#${pathId}`)
+        .attr('startOffset', '50%')
+        .attr('text-anchor', 'middle')
+        .text(title);
+    }
   }
 
   private bindTouchOutsideDismiss(onDismiss: () => void): void {

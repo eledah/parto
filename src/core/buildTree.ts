@@ -1,4 +1,5 @@
 import type { ArgumentMapNode, TreeNode } from '../types.js';
+import { isWedge } from './collapse.js';
 
 export interface BuildTreeResult {
   tree: TreeNode | null;
@@ -84,7 +85,22 @@ export function buildTree(nodes: ArgumentMapNode[]): BuildTreeResult {
   };
 
   const tree = buildRecursive(thesisNode, undefined, undefined, undefined, new Set(), [thesisNode.id]);
+  assignLeafWeights(tree);
   return { tree, warnings };
+}
+
+/** Sets node.value to the descendant leaf count (leaves weigh 1). */
+export function assignLeafWeights(node: TreeNode): number {
+  if (node.children.length === 0) {
+    node.value = 1;
+    return 1;
+  }
+  let total = 0;
+  for (const child of node.children) {
+    total += assignLeafWeights(child);
+  }
+  node.value = total;
+  return total;
 }
 
 export function findNodeById(root: TreeNode | null, id: string): TreeNode | null {
@@ -129,6 +145,7 @@ export function pathToNode(root: TreeNode, targetId: string): TreeNode[] {
 
 export function getNodeArcClass(node: TreeNode, currentRoot: TreeNode | null): string {
   if (currentRoot && node.id === currentRoot.id) return 'pam-arc--center';
+  if (isWedge(node)) return 'pam-arc--collapsed';
   if (node.relationType === 'attack') return 'pam-arc--attack';
   return 'pam-arc--support';
 }

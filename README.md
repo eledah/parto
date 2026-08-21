@@ -7,6 +7,7 @@
 - Yellow center (thesis), green agree (support), red disagree (attack)
 - Light / dark / system themes
 - Hover tooltips and click-to-zoom
+- Deep-map friendly: leaf-weighted angles, sliver-proof ring sizing, "+N" collapse wedges, auto-focus into the heaviest branch
 - ESM for bundlers + CDN global bundle for plain HTML
 
 ## Install
@@ -176,6 +177,23 @@ Local copies in `examples/` (run `npm run build` first, or serve with any static
 - `examples/02-theme-tooltip` — themes and custom tooltip
 - `examples/03-esm-rtl` — ESM import with Persian/RTL data
 - `examples/04-fetch-json` — load map data from a JSON file
+- `examples/05-deep-map` — 7-level map exercising auto-focus and "+N" collapse wedges
+
+## How deep maps stay readable
+
+Argument maps grow fast. Parto keeps deep maps legible with three layout rules:
+
+1. **Leaf-weighted angles** — a branch's arc width is proportional to how much
+   argument it contains (descendant leaves), not just its sibling count.
+2. **Sliver-proof rings** — ring thickness is allocated so the shortest arc at
+   every depth is never shorter than the ring is thick; narrow "long thin wedge"
+   arcs are geometrically impossible.
+3. **"+N" wedges** — branches too small to read collapse into dashed wedges
+   showing their argument count. Hover previews the hidden titles; click to
+   expand the group into focus.
+
+Maps deeper than four levels open focused on their heaviest branch instead of
+cramming everything into one view (`Esc` / `Backspace` / center-click zoom out).
 
 ## Publish
 

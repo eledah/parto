@@ -146,6 +146,7 @@ class ArgumentMapChartImpl implements ArgumentMapChart {
 
       this.status.hide();
       this.zoom.setTree(tree);
+      this.zoom.autoFocusDeep(chartConfig.limits.autoFocusDepth);
       this.render();
       this.emitZoomChange();
     } catch (err) {

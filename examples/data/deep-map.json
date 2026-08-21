@@ -1,0 +1,274 @@
+{
+  "new_nodes": [
+    {
+      "id": "T",
+      "type": "thesis",
+      "title": "Cities should invest heavily in cycling infrastructure",
+      "description": "A citywide program of protected bike lanes, parking, and intersection upgrades.",
+      "quote": "",
+      "speaker": "Moderator",
+      "relations": []
+    },
+    {
+      "id": "S1",
+      "type": "claim",
+      "title": "Cycling cuts transport emissions",
+      "description": "Shifting short trips from cars to bikes lowers urban CO2 and air pollution.",
+      "quote": "",
+      "speaker": "Priya",
+      "score": { "intensity": 0.8, "confidence": 0.9 },
+      "relations": [
+        { "target_node_id": "T", "relation_type": "support", "reasoning": "Transport is a top-3 urban emissions source; mode shift attacks it directly." }
+      ]
+    },
+    {
+      "id": "S1a",
+      "type": "claim",
+      "title": "Bikes have zero tailpipe emissions",
+      "description": "Every car trip replaced removes exhaust entirely.",
+      "quote": "",
+      "speaker": "Priya",
+      "relations": [
+        { "target_node_id": "S1", "relation_type": "support", "reasoning": "No combustion means no direct emissions." }
+      ]
+    },
+    {
+      "id": "S1a1",
+      "type": "claim",
+      "title": "Life-cycle studies confirm net CO2 savings",
+      "description": "Even including manufacturing, bikes win on total footprint.",
+      "quote": "",
+      "speaker": "Sam",
+      "relations": [
+        { "target_node_id": "S1a", "relation_type": "support", "reasoning": "Production emissions are repaid quickly per km ridden." }
+      ]
+    },
+    {
+      "id": "S1a1a",
+      "type": "claim",
+      "title": "Frame production is repaid within months",
+      "description": "Typical riders offset the frame's embodied carbon fast.",
+      "quote": "\"The break-even point arrives after roughly 400 commuted kilometres.\"",
+      "speaker": "Sam",
+      "score": { "intensity": 0.6, "confidence": 0.75 },
+      "relations": [
+        { "target_node_id": "S1a1", "relation_type": "support", "reasoning": "Commuters cover that distance in the first season." }
+      ]
+    },
+    {
+      "id": "S1a1a1",
+      "type": "claim",
+      "title": "Aluminum recycling closes the loop",
+      "description": "Frames use highly recyclable alloys, shrinking lifetime impact further.",
+      "quote": "",
+      "speaker": "Sam",
+      "relations": [
+        { "target_node_id": "S1a1a", "relation_type": "support", "reasoning": "Recycled content reduces embodied energy dramatically." }
+      ]
+    },
+    {
+      "id": "S1a1a1a",
+      "type": "claim",
+      "title": "Recycled aluminum needs 95% less energy",
+      "description": "Secondary smelting is vastly cheaper energetically than primary extraction.",
+      "quote": "\"Remelting scrap takes a fraction of the energy of bauxite processing.\"",
+      "speaker": "Dana",
+      "score": { "intensity": 0.7, "confidence": 0.85 },
+      "relations": [
+        { "target_node_id": "S1a1a1", "relation_type": "support", "reasoning": "The dominant material cost of frames drops accordingly." }
+      ]
+    },
+    {
+      "id": "S2",
+      "type": "claim",
+      "title": "Cycling improves public health",
+      "description": "Regular riding reduces disease burden and healthcare spending.",
+      "quote": "",
+      "speaker": "Lena",
+      "score": { "intensity": 0.9, "confidence": 0.8 },
+      "relations": [
+        { "target_node_id": "T", "relation_type": "support", "reasoning": "Health gains are an independent justification beyond emissions." }
+      ]
+    },
+    {
+      "id": "S2a",
+      "type": "claim",
+      "title": "Riders show lower cardiovascular risk",
+      "description": "Cohort studies link commuting by bike to healthier hearts.",
+      "quote": "",
+      "speaker": "Lena",
+      "relations": [
+        { "target_node_id": "S2", "relation_type": "support", "reasoning": "Consistent aerobic exercise is the best-evidenced intervention." }
+      ]
+    },
+    {
+      "id": "S2a1",
+      "type": "claim",
+      "title": "Large cohort studies agree",
+      "description": "UK Biobank and Danish cohort data both show the effect.",
+      "quote": "\"Bike commuters had a 41% lower risk of premature death.\"",
+      "speaker": "Omar",
+      "score": { "intensity": 0.75, "confidence": 0.8 },
+      "relations": [
+        { "target_node_id": "S2a", "relation_type": "support", "reasoning": "Effects replicate across countries and sample sizes." }
+      ]
+    },
+    {
+      "id": "S2a2",
+      "type": "claim",
+      "title": "Benefits persist across age groups",
+      "description": "The association holds for middle-aged and older adults alike.",
+      "quote": "",
+      "speaker": "Omar",
+      "relations": [
+        { "target_node_id": "S2a", "relation_type": "support", "reasoning": "Not an artifact of young, fit early adopters." }
+      ]
+    },
+    {
+      "id": "S2b",
+      "type": "claim",
+      "title": "Active commuting reduces sick days",
+      "description": "Employers report fewer absences among cycling staff.",
+      "quote": "",
+      "speaker": "Lena",
+      "relations": [
+        { "target_node_id": "S2", "relation_type": "support", "reasoning": "Productivity effects strengthen the economic case." }
+      ]
+    },
+    {
+      "id": "A1",
+      "type": "claim",
+      "title": "Cycling infrastructure is too expensive",
+      "description": "Protected networks demand heavy capital and recurring budgets.",
+      "quote": "",
+      "speaker": "Marcus",
+      "score": { "intensity": 0.65, "confidence": 0.6 },
+      "relations": [
+        { "target_node_id": "T", "relation_type": "attack", "reasoning": "Costs may outweigh benefits compared to cheaper interventions." }
+      ]
+    },
+    {
+      "id": "A1a",
+      "type": "claim",
+      "title": "Lane mileage costs are high per km",
+      "description": "Protected lanes cost several times more than paint.",
+      "quote": "",
+      "speaker": "Marcus",
+      "relations": [
+        { "target_node_id": "A1", "relation_type": "attack", "reasoning": "Capital budgets are finite and contested." }
+      ]
+    },
+    {
+      "id": "A1b",
+      "type": "claim",
+      "title": "Winter maintenance adds recurring cost",
+      "description": "Snow clearing and de-icing keep lanes usable but expensive.",
+      "quote": "",
+      "speaker": "Nadia",
+      "relations": [
+        { "target_node_id": "A1", "relation_type": "attack", "reasoning": "Northern cities pay annually, not just once." }
+      ]
+    },
+    {
+      "id": "A1c",
+      "type": "claim",
+      "title": "Parking removal has political costs",
+      "description": "Every lane competes with storage for cars.",
+      "quote": "\"Councillors get recalled over parking.\"",
+      "speaker": "Marcus",
+      "score": { "intensity": 0.5, "confidence": 0.55 },
+      "relations": [
+        { "target_node_id": "A1", "relation_type": "attack", "reasoning": "Implementation risk raises the true price of the program." }
+      ]
+    },
+    {
+      "id": "A1d",
+      "type": "claim",
+      "title": "Intersection signal upgrades are pricey",
+      "description": "Safe crossings need dedicated signal phases everywhere.",
+      "quote": "",
+      "speaker": "Nadia",
+      "relations": [
+        { "target_node_id": "A1", "relation_type": "attack", "reasoning": "Junctions are where most of the cost and danger concentrate." }
+      ]
+    },
+    {
+      "id": "A1e",
+      "type": "claim",
+      "title": "Liability exposure grows for the city",
+      "description": "New infrastructure classes create novel lawsuit surface.",
+      "quote": "",
+      "speaker": "Marcus",
+      "relations": [
+        { "target_node_id": "A1", "relation_type": "attack", "reasoning": "Legal reserves must scale with the network." }
+      ]
+    },
+    {
+      "id": "A1f",
+      "type": "claim",
+      "title": "Enforcement needs new budgets",
+      "description": "Blocked lanes require active policing or camera programs.",
+      "quote": "",
+      "speaker": "Nadia",
+      "relations": [
+        { "target_node_id": "A1", "relation_type": "attack", "reasoning": "Unenforced lanes degrade into parking within months." }
+      ]
+    },
+    {
+      "id": "A1g",
+      "type": "claim",
+      "title": "Planning and consultation fees accumulate",
+      "description": "Design studies, hearings, and reviews add soft costs at scale.",
+      "quote": "",
+      "speaker": "Marcus",
+      "relations": [
+        { "target_node_id": "A1", "relation_type": "attack", "reasoning": "Soft costs can rival construction on long corridors." }
+      ]
+    },
+    {
+      "id": "A1h",
+      "type": "claim",
+      "title": "Opportunity cost diverts funds from transit",
+      "description": "Bus rapid transit may deliver more benefit per dollar.",
+      "quote": "\"The same corridor moves five times as many people by bus.\"",
+      "speaker": "Kai",
+      "score": { "intensity": 0.6, "confidence": 0.5 },
+      "relations": [
+        { "target_node_id": "A1", "relation_type": "attack", "reasoning": "Comparative returns matter more than absolute costs." }
+      ]
+    },
+    {
+      "id": "A2",
+      "type": "claim",
+      "title": "Weather makes cycling impractical year-round",
+      "description": "Climate limits ridership in many candidate cities.",
+      "quote": "",
+      "speaker": "Kai",
+      "relations": [
+        { "target_node_id": "T", "relation_type": "attack", "reasoning": "Utilization assumptions drive every projected benefit." }
+      ]
+    },
+    {
+      "id": "A2a",
+      "type": "claim",
+      "title": "Rain and snow suppress ridership",
+      "description": "Trip counts collapse during wet seasons.",
+      "quote": "",
+      "speaker": "Kai",
+      "relations": [
+        { "target_node_id": "A2", "relation_type": "attack", "reasoning": "Idle infrastructure still depreciates." }
+      ]
+    },
+    {
+      "id": "A2b",
+      "type": "claim",
+      "title": "Heat waves deter midday commuting",
+      "description": "Extreme heat narrows the comfortable riding window.",
+      "quote": "",
+      "speaker": "Nadia",
+      "relations": [
+        { "target_node_id": "A2", "relation_type": "attack", "reasoning": "Climate trends push this effect wider each decade." }
+      ]
+    }
+  ]
+}

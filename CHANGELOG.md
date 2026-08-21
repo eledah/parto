@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.2.0 (unreleased)
+
+### Layout engine (deep maps)
+
+- **Leaf-weighted angles**: arc width now reflects subtree size (descendant leaf
+  count) instead of equal slices per sibling — busy branches get the space they need.
+- **Sliver-proof ring allocation** (`computeRingBoundaries`): radial bands are
+  sized so the shortest arc at each depth is never shorter than the ring is
+  thick; maps with 4+ layers no longer render as narrow, long outer wedges.
+- **"+N" collapse wedges**: branches narrower than `spacing.minAngle` collapse
+  into dashed wedges with argument counts and hover previews of hidden titles;
+  clicking a wedge expands it into focus. Tiny leaf runs group into wedges too;
+  lone tiny leaves pass through unwrapped.
+- **Auto-focus for deep maps**: trees deeper than `limits.autoFocusDepth` open
+  focused on their heaviest first-level branch; `resetZoom()` returns to that
+  entry point rather than the full cramped tree.
+
+### API
+
+- New exports: `applyCollapse`, `expandWedge`, `isWedge`, `computeRingBoundaries`.
+- `TreeNode` gained optional `wedgeMeta` (`count`, `titles`, `hidden`).
+
+### Internal
+
+- Removed dead equal-angle pass and unused radius-exponent path in
+  `SunburstRenderer`; partition values now drive layout directly via
+  `hierarchy.sum()`.
+- New test suites: ring-layout invariants (incl. randomized adversarial spans),
+  collapse behavior, leaf weights, auto-focus/wedge navigation.
+
 ## 0.1.0
 
 - Publish as `@eledah/parto` (npm package rename)

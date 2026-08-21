@@ -41,6 +41,16 @@ export const chartConfig = {
     padAngle: { inner: 0.025, outer: 0.012 },
     radiusExponent: { base: 1.2, perLevel: 0.2 },
     exponentDepthThreshold: 3,
+    /** Angular span (radians) below which sibling subtrees collapse into "+N" wedges. */
+    minAngle: 0.045,
+  },
+  limits: {
+    /** Depth beyond which the chart auto-focuses into the heaviest branch on load. */
+    autoFocusDepth: 4,
+    /** Maximum hidden subtrees grouped per "+N" wedge. */
+    wedgeChunkSize: 8,
+    /** Minimum band thickness as a fraction of the chart radius. */
+    ringMinThicknessFraction: 0.012,
   },
 };
 

@@ -61,6 +61,15 @@
   fill: var(--pam-attack);
 }
 
+.pam-chart__canvas path.pam-arc--collapsed {
+  fill: color-mix(in srgb, var(--pam-text-muted, #5c6b73) 30%, transparent);
+  stroke-dasharray: 3 2;
+}
+
+.pam-chart__canvas path.pam-arc--collapsed.pam-arc--dimmed {
+  opacity: 0.2 !important;
+}
+
 .pam-chart__canvas path.pam-arc--dimmed {
   opacity: 0.35 !important;
   filter: none !important;

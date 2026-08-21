@@ -56,6 +56,15 @@ export interface NodeContext {
   type: string;
 }
 
+export interface WedgeMeta {
+  /** Number of hidden arguments grouped into this wedge. */
+  count: number;
+  /** Preview titles for tooltips (first few hidden nodes). */
+  titles: string[];
+  /** Hidden subtrees, materialized when the wedge is focused. */
+  hidden: TreeNode[];
+}
+
 export interface TreeNode extends ArgumentMapNode {
   children: TreeNode[];
   value: number;
@@ -64,6 +73,8 @@ export interface TreeNode extends ArgumentMapNode {
   parentId?: string;
   /** Unique key for this visual occurrence (supports multi-parent nodes). */
   pathKey: string;
+  /** Present on synthetic "+N more" wedges created by arc collapse. */
+  wedgeMeta?: WedgeMeta;
 }
 
 export type TooltipRenderer = (

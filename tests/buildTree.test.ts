@@ -58,4 +58,42 @@ describe('buildTree', () => {
     const { tree } = buildTree([sampleNodes[0]!]);
     expect(tree?.children).toHaveLength(0);
   });
+
+  it('weights nodes by descendant leaf count', () => {
+    const { tree } = buildTree(sampleNodes);
+    expect(tree?.value).toBe(2); // thesis with two leaf children
+    for (const child of tree!.children) {
+      expect(child.value).toBe(1);
+    }
+  });
+
+  it('deep branches outweigh shallow ones', () => {
+    const deep = sampleNodes.map((n) => ({ ...n }));
+    const { tree } = buildTree([
+      ...deep,
+      {
+        id: '4',
+        type: 'claim',
+        title: 'Deep child A',
+        description: '',
+        quote: '',
+        speaker: '',
+        relations: [{ target_node_id: '2', relation_type: 'support', reasoning: '' }],
+      },
+      {
+        id: '5',
+        type: 'claim',
+        title: 'Deep child B',
+        description: '',
+        quote: '',
+        speaker: '',
+        relations: [{ target_node_id: '2', relation_type: 'support', reasoning: '' }],
+      },
+    ]);
+    const support = tree!.children[0]!;
+    const attack = tree!.children[1]!;
+    expect(support.children).toHaveLength(2);
+    expect(support.value).toBeGreaterThan(attack.value);
+    expect(tree!.value).toBe(3); // leaves: '3', '4', '5'
+  });
 });

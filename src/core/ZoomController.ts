@@ -1,13 +1,17 @@
 import { findNodeById, findNodeByPath, pathToNode } from './buildTree.js';
+import { expandWedge, isWedge } from './collapse.js';
 import type { NodeContext, TreeNode } from '../types.js';
 
 export class ZoomController {
   private fullTree: TreeNode | null = null;
   private zoomStack: TreeNode[] = [];
+  /** Branch chosen by auto-focus; resetZoom returns here instead of the full tree. */
+  private autoFocusEntry: TreeNode | null = null;
 
   setTree(tree: TreeNode | null): void {
     this.fullTree = tree;
     this.zoomStack = tree ? [tree] : [];
+    this.autoFocusEntry = null;
   }
 
   getFocusRoot(): TreeNode | null {
@@ -26,7 +30,36 @@ export class ZoomController {
   resetZoom(): void {
     if (this.fullTree) {
       this.zoomStack = [this.fullTree];
+      if (this.autoFocusEntry) {
+        this.zoomStack.push(this.autoFocusEntry);
+      }
     }
+  }
+
+  /**
+   * When the rendered tree is deeper than maxVisibleDepth, focus into the heaviest
+   * (leaf-weighted) first-level branch so deep maps open readable instead of cramped.
+   */
+  autoFocusDeep(maxVisibleDepth: number): boolean {
+    const root = this.fullTree;
+    if (!root || root.children.length === 0) return false;
+    if (this.maxDepth(root) <= maxVisibleDepth) return false;
+
+    let heaviest = root.children[0]!;
+    for (const child of root.children) {
+      if (child.value > heaviest.value) heaviest = child;
+    }
+    this.autoFocusEntry = heaviest;
+    this.zoomStack = [root, heaviest];
+    return true;
+  }
+
+  private maxDepth(node: TreeNode): number {
+    let depth = 0;
+    for (const child of node.children) {
+      depth = Math.max(depth, this.maxDepth(child) + 1);
+    }
+    return depth;
   }
 
   zoomTo(nodeId: string): boolean {
@@ -72,6 +105,11 @@ export class ZoomController {
   handleClick(node: TreeNode, depth: number, hasChildren: boolean): void {
     if (depth === 0) {
       this.zoomOut();
+      return;
+    }
+    if (isWedge(node)) {
+      const expanded = expandWedge(node);
+      if (expanded) this.zoomStack.push(expanded);
       return;
     }
     if (hasChildren) {

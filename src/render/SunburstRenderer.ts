@@ -2,6 +2,8 @@ import * as d3 from 'd3';
 import type { HierarchyRectangularNode } from 'd3-hierarchy';
 import { chartConfig, syncColorsFromCss } from '../config.js';
 import { getNodeArcClass, getNodeColor } from '../core/buildTree.js';
+import { applyCollapse, isWedge } from '../core/collapse.js';
+import { computeRingBoundaries } from '../core/ringLayout.js';
 import type { TreeNode } from '../types.js';
 
 type D3Node = HierarchyRectangularNode<TreeNode>;
@@ -56,7 +58,7 @@ export class SunburstRenderer {
 
     this.g = this.svg.append('g');
 
-    this.partition = d3.partition<TreeNode>().size([2 * Math.PI, this.radius]);
+    this.partition = d3.partition<TreeNode>().size([2 * Math.PI, 1]);
 
     this.arc = d3
       .arc<unknown, D3Node>()
@@ -88,7 +90,7 @@ export class SunburstRenderer {
 
     if (this.radius < chartConfig.chart.minRadius) return;
 
-    this.partition.size([2 * Math.PI, this.radius]);
+    this.partition.size([2 * Math.PI, 1]);
     this.svg.attr('viewBox', `0 0 ${this.width} ${this.height}`);
     this.g.attr('transform', `translate(${this.width / 2}, ${this.height / 2})`);
 
@@ -111,60 +113,69 @@ export class SunburstRenderer {
     syncColorsFromCss(this.container);
     const colors = chartConfig.colors;
 
-    const hierarchyRoot = d3.hierarchy(rootNode);
-    let maxDepth = 0;
-    hierarchyRoot.each((d) => {
-      maxDepth = Math.max(maxDepth, d.depth);
-    });
+    const maxDepth = (node: TreeNode): number =>
+      node.children.reduce((max, child) => Math.max(max, maxDepth(child) + 1), 0);
+    const safeMaxDepth = Math.max(maxDepth(rootNode), 1);
 
-    const safeMaxDepth = Math.max(maxDepth, 1);
-
-    this.partition(hierarchyRoot as D3Node);
-    const root = hierarchyRoot as D3Node;
-
-    const setEqualAngles = (node: D3Node, x0: number, x1: number) => {
-      node.x0 = x0;
-      node.x1 = x1;
-      if (node.children?.length) {
-        const span = x1 - x0;
-        const childSpan = span / node.children.length;
-        node.children.forEach((child, i) => {
-          setEqualAngles(child as D3Node, x0 + i * childSpan, x0 + (i + 1) * childSpan);
-        });
-      }
-    };
-    setEqualAngles(root, 0, 2 * Math.PI);
-
-    const getRadius = (y: number) => {
-      const normalized = y / this.radius;
-      const exponent =
-        chartConfig.spacing.radiusExponent.base +
-        (safeMaxDepth - chartConfig.spacing.exponentDepthThreshold) *
-          chartConfig.spacing.radiusExponent.perLevel;
-      return Math.pow(normalized, exponent) * this.radius;
+    /** Angular weight of a node itself: leaves count 1, wedges count their hidden args. */
+    const selfWeight = (node: TreeNode): number => {
+      if (isWedge(node)) return Math.max(1, node.wedgeMeta?.count ?? 1);
+      return node.children.length === 0 ? 1 : 0;
     };
 
-    const verticalGap = this.radius * chartConfig.spacing.verticalGap;
-
-    const getPadAngle = (d: D3Node) => {
-      const depthFraction = d.depth / safeMaxDepth;
+    const getPadAngle = (depth: number) => {
+      const depthFraction = depth / safeMaxDepth;
       return (
         chartConfig.spacing.padAngle.inner -
         depthFraction * (chartConfig.spacing.padAngle.inner - chartConfig.spacing.padAngle.outer)
       );
     };
 
+    /** Partition pass returning each node's effective (pad-adjusted) visual span. */
+    const layoutPass = (root: TreeNode): { hierarchy: D3Node; spans: Map<string, number> } => {
+      const hierarchyRoot = d3.hierarchy(root).sum(selfWeight);
+      this.partition(hierarchyRoot as D3Node);
+      const spans = new Map<string, number>();
+      (hierarchyRoot as D3Node).each((d) => {
+        const raw = d.x1 - d.x0;
+        spans.set(d.data.pathKey, Math.max(raw - getPadAngle(d.depth), 1e-6));
+      });
+      return { hierarchy: hierarchyRoot as D3Node, spans };
+    };
+
+    // Measurement pass on the untouched subtree decides which branches collapse.
+    const measuredSpans = layoutPass(rootNode).spans;
+
+    const { root: displayRoot } = applyCollapse(rootNode, {
+      spans: measuredSpans,
+      minAngle: chartConfig.spacing.minAngle,
+      chunkSize: chartConfig.limits.wedgeChunkSize,
+    });
+
+    // Final geometry pass on the collapsed tree.
+    const { hierarchy: root, spans: finalSpans } = layoutPass(displayRoot);
+
+    const minSpansByDepth: number[] = new Array(safeMaxDepth + 1).fill(Number.POSITIVE_INFINITY);
+    minSpansByDepth[0] = Number.POSITIVE_INFINITY;
+    for (const node of root.descendants()) {
+      if (node.depth === 0) continue;
+      const span = finalSpans.get(node.data.pathKey);
+      if (span === undefined) continue;
+      minSpansByDepth[node.depth] = Math.min(minSpansByDepth[node.depth], span);
+    }
+
+    const bands = computeRingBoundaries(minSpansByDepth, {
+      radius: this.radius,
+      centerCap: this.radius * chartConfig.chart.maxCenterRadius,
+      minThickness: this.radius * chartConfig.limits.ringMinThicknessFraction,
+    });
+
+    const verticalGap = this.radius * chartConfig.spacing.verticalGap;
+
     this.arc
-      .innerRadius((d) => getRadius(d.y0) + verticalGap)
-      .outerRadius((d) =>
-        d.depth === 0
-          ? Math.min(
-              getRadius(d.y1) - verticalGap,
-              this.radius * chartConfig.chart.maxCenterRadius,
-            )
-          : getRadius(d.y1) - verticalGap,
-      )
-      .padAngle(getPadAngle)
+      .innerRadius((d) => bands[d.depth] + verticalGap)
+      .outerRadius((d) => bands[d.depth + 1] - verticalGap)
+      .padAngle((d) => getPadAngle(d.depth))
       .cornerRadius(chartConfig.chart.cornerRadius);
 
     this.g.selectAll('*').remove();
@@ -180,7 +191,9 @@ export class SunburstRenderer {
       .attr('class', (d) => getNodeArcClass(d.data, rootNode))
       .attr('tabindex', '0')
       .attr('role', 'button')
-      .attr('aria-label', (d) => d.data.title)
+      .attr('aria-label', (d) =>
+        isWedge(d.data) ? `Show ${d.data.wedgeMeta?.count ?? 0} hidden arguments` : d.data.title,
+      )
       .attr('aria-describedby', this.tooltipId)
       .style('stroke', colors.border)
       .style('stroke-width', chartConfig.chart.strokeWidth)
@@ -212,6 +225,9 @@ export class SunburstRenderer {
       this.options.onLeave?.();
     };
 
+    const hasChildren = (d: D3Node): boolean =>
+      (d.data.children?.length ?? 0) > 0 || isWedge(d.data);
+
     const handlePointerClick = (event: PointerEvent, d: D3Node) => {
       event.stopPropagation();
 
@@ -220,7 +236,7 @@ export class SunburstRenderer {
           this.touchZoomPathKey = null;
           this.unbindTouchOutsideDismiss();
           if (this.options.zoomEnabled) {
-            this.options.onClick?.(d.data, d.depth, (d.data.children?.length ?? 0) > 0);
+            this.options.onClick?.(d.data, d.depth, hasChildren(d));
           }
         } else {
           this.touchZoomPathKey = d.data.pathKey;
@@ -231,7 +247,7 @@ export class SunburstRenderer {
       }
 
       if (this.options.zoomEnabled) {
-        this.options.onClick?.(d.data, d.depth, (d.data.children?.length ?? 0) > 0);
+        this.options.onClick?.(d.data, d.depth, hasChildren(d));
       }
     };
 
@@ -255,7 +271,7 @@ export class SunburstRenderer {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           if (this.options.zoomEnabled) {
-            this.options.onClick?.(d.data, d.depth, (d.data.children?.length ?? 0) > 0);
+            this.options.onClick?.(d.data, d.depth, hasChildren(d));
           }
         }
       });

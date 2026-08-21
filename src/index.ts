@@ -3,6 +3,8 @@ import './styles/argument-map.css';
 export { createArgumentMap } from './ArgumentMapChart.js';
 export { validateMapData } from './core/validateMapData.js';
 export { buildTree, findNodeById, pathToNode } from './core/buildTree.js';
+export { applyCollapse, expandWedge, isWedge } from './core/collapse.js';
+export { computeRingBoundaries } from './core/ringLayout.js';
 export { ZoomController } from './core/ZoomController.js';
 export { SunburstRenderer } from './render/SunburstRenderer.js';
 export { createDefaultTooltip } from './ui/TooltipController.js';

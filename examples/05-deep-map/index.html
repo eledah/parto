@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Argument Map — Deep map (7 levels)</title>
+    <link rel="stylesheet" href="../../dist/parto.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #f6f3ec;
+        color: #1a2328;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin-bottom: 8px;
+      }
+      p {
+        color: #5c6b73;
+        margin-bottom: 16px;
+      }
+      #chart {
+        height: 640px;
+        border: 1px solid #d8d2c8;
+        border-radius: 12px;
+        background: #fff;
+      }
+      ul {
+        color: #5c6b73;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Argument Map — deep map (7 levels)</h1>
+      <p>
+        This map has six layers of arguments below the thesis. Watch how the layout
+        engine keeps it readable:
+      </p>
+      <ul>
+        <li>The chart opens focused on the heaviest branch instead of cramming all layers in.</li>
+        <li>Branches with many siblings get proportional arc space (leaf-weighted angles).</li>
+        <li>Arcs too narrow to read collapse into dashed "+N" wedges — click one to expand it.</li>
+        <li>Click the center disc or press <kbd>Esc</kbd> / <kbd>Backspace</kbd> to zoom out.</li>
+      </ul>
+      <div id="chart"></div>
+    </main>
+    <script src="../../dist/parto.global.min.js"></script>
+    <script>
+      const chart = Parto.createArgumentMap('#chart', null, {
+        theme: 'auto',
+        ariaLabel: 'Deep argument map about cycling infrastructure',
+      });
+
+      chart.setLoading(true);
+
+      fetch('../data/deep-map.json')
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Failed to load map (${response.status})`);
+          }
+          return response.json();
+        })
+        .then((mapData) => {
+          chart.setLoading(false);
+          chart.setData(mapData);
+        })
+        .catch((err) => {
+          chart.setLoading(false);
+          chart.showError(err.message);
+        });
+    </script>
+  </body>
+</html>

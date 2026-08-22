@@ -1,6 +1,6 @@
 {
   "name": "@eledah/parto",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Framework-agnostic argument map sunburst charts with light/dark themes",
   "type": "module",
   "license": "MIT",

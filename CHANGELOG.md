@@ -1,8 +1,37 @@
 # Changelog
 
+## 0.3.0
+
+### Ring layout rewrite (sliver-proof allocator v2)
+
+- **Fixed: giant center disc** on shallow/focused views. The thesis ring no
+  longer re-inflates past `chart.maxCenterRadius` (default now 0.32·R, was
+  0.4·R); deep-map demos keep the center at ~1/4–1/3 of the radius.
+- **Correct boundary multiplier**: the sliver cap bounds thickness over inner
+  radius, so the outer edge obeys `B(d+1) ≤ B(d)·(2 + Ks)/(2 − Ks)` —
+  monotone by construction, no inward collapse or chain "humping".
+- **Unified λ\* search**: one binary search finds the unique relaxation that
+  closes the outer boundary at the chart radius. λ\* ≤ 1 guarantees the
+  strict sliver invariant with exact fill; geometrically impossible inputs
+  degrade *uniformly* — every band's aspect ratio lifts by exactly λ\*.
+  Replaces repair/rescale loops and additive stretch passes that could
+  oscillate or dump excess into a single band.
+- New `aspectTolerance` option (`spacing.sliverAspectRatio`, default 3);
+  `minThickness` floors kept as a sub-10px visual override.
+
+### Global bundle & sharing
+
+- `Parto.encodeZoomPath`, `Parto.decodeZoomPath`, and `Parto.ZOOM_PARAM`
+  are now exposed by the CDN/IIFE bundle (fixes "not a function" errors in
+  example 07 share links).
+
+### Examples
+
+- New example 08: RTL Farsi long-form article where a live map grows from
+  one claim to 260+ nodes across four stages as you read.
+
 ## 0.2.0
 
-<<<<<<< HEAD
 ### Architecture & layouts (Phase 4)
 
 - **Per-instance config**: every chart resolves a frozen config snapshot at

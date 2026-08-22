@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>از یک جمله تا یک مذاکره — رشد یک نقشه استدلال</title>
+    <title>از یک جمله تا یک مذاکره — کالبدشکافی یک نقشه استدلال</title>
     <link rel="stylesheet" href="../../dist/parto.css" />
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap');
@@ -22,9 +22,20 @@
         line-height: 2;
       }
       .wrap {
-        max-width: 720px;
+        max-width: 760px;
         margin: 0 auto;
         padding: 40px 20px 80px;
+      }
+      .back {
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .back a {
+        color: #285b3d;
+        text-decoration: none;
+      }
+      .back a:hover {
+        text-decoration: underline;
       }
       .kicker {
         color: var(--accent);
@@ -40,81 +51,12 @@
       .byline {
         color: var(--muted);
         font-size: 14px;
-        margin-bottom: 28px;
-      }
-      #stage-panel {
-        position: sticky;
-        top: 0;
-        z-index: 5;
-        background: rgba(251, 250, 247, 0.94);
-        backdrop-filter: blur(6px);
-        padding: 12px 0;
-        border-bottom: 1px solid var(--border);
-        margin-bottom: 28px;
-      }
-      #chart {
-        height: min(58vh, 520px);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        background: #fff;
-        box-shadow: 0 12px 36px rgba(24, 33, 38, 0.07);
-      }
-      #breadcrumb {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 4px;
-        min-height: 26px;
-        margin: 10px auto 0;
-        font-size: 13px;
-        color: var(--muted);
-      }
-      #breadcrumb button {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font: inherit;
-        font-weight: 650;
-        padding: 2px 4px;
-      }
-      #breadcrumb button[data-relation='center'] { color: #755916; }
-      #breadcrumb button[data-relation='support'] { color: #285b3d; }
-      #breadcrumb button[data-relation='attack'] { color: #7f3737; }
-      #breadcrumb button[aria-current='page'] { font-weight: 750; }
-      .breadcrumb__separator { color: #9aa5aa; font-weight: 600; }
-      .stagebar {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-bottom: 10px;
-        font-size: 13px;
-        color: var(--muted);
-      }
-      .stagebar button {
-        padding: 4px 12px;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: #fff;
-        color: var(--ink);
-        cursor: pointer;
-        font: inherit;
-        font-size: 13px;
-      }
-      .stagebar button[aria-current='true'] {
-        background: var(--accent);
-        border-color: var(--accent);
-        color: #fff;
-      }
-      article section {
-        margin-bottom: 56px;
+        margin-bottom: 36px;
       }
       article h2 {
         font-size: 1.25rem;
         line-height: 1.7;
-        margin: 0 0 8px;
+        margin: 48px 0 8px;
       }
       article p { margin: 0 0 14px; text-align: justify; }
       blockquote {
@@ -126,19 +68,23 @@
         color: #45535a;
         font-size: 15px;
       }
-      .back {
-        font-size: 14px;
-        margin-bottom: 16px;
+      figure { margin: 28px 0; }
+      .diagram {
+        height: min(52vh, 440px);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 12px 36px rgba(24, 33, 38, 0.07);
+        overflow: hidden;
       }
-      .back a {
-        color: #285b3d;
-        text-decoration: none;
-      }
-      .back a:hover {
-        text-decoration: underline;
+      figcaption {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--muted);
+        text-align: center;
       }
       .note {
-        margin-top: 40px;
+        margin-top: 48px;
         padding: 16px 20px;
         background: #fff;
         border: 1px solid var(--border);
@@ -152,91 +98,106 @@
   <body>
     <div class="wrap">
       <p class="back"><a href="../../">&#8594; همهٔ نمونه‌ها</a></p>
+
       <header>
         <div class="kicker">گزارش تعاملی</div>
         <h1>از یک جمله تا یک مذاکره:<br />کالبدشکافی رشد یک نقشه استدلال</h1>
-        <div class="byline">همراه با نقشهٔ زنده — هرچه بخوانید، نقشه بزرگ‌تر می‌شود</div>
+        <div class="byline">پنج نمودار زنده — هر بخش، یک برش از عمر یک بحث</div>
       </header>
 
-      <div id="stage-panel">
-        <div class="stagebar" role="group" aria-label="مرحلهٔ رشد نقشه">
-          <span id="stage-label"></span>
-          <button type="button" data-stage="1">۱ · گزاره</button>
-          <button type="button" data-stage="2">۲ · گفتگو</button>
-          <button type="button" data-stage="3">۳ · مناقشه</button>
-          <button type="button" data-stage="4">۴ · مذاکره</button>
-        </div>
-        <div id="chart" aria-label="نقشه استدلال زنده"></div>
-        <nav id="breadcrumb" aria-label="مسیر زوم"></nav>
-      </div>
-
       <article>
-        <section data-stage="1">
-          <h2>هر بحث با یک جمله شروع می‌شود</h2>
+        <p>
+          هر بحث مهندسی‌شده‌ای — از تصمیم معماری یک محصول تا مناقشه‌ای حقوقی — از یک
+          جمله شروع می‌شود و به شبکه‌ای از ادعاها می‌رسد. در این گزارش، عمر یک بحث واقعی
+          را در پنج پرده مرور می‌کنیم؛ هر پرده یک نمودار «پارتو» دارد که می‌توانید زوم
+          کنید، روی قطاع‌ها کلیک کنید و مسیر استدلال را دنبال کنید.
+        </p>
+        <blockquote>بحث ما دربارهٔ این گزاره است: «دورکاری برای تیم‌های مهندسی از حضور تمام‌وقت در دفتر اثربخش‌تر است.»</blockquote>
+
+        <section>
+          <h2>پردهٔ اول — گزاره و دو چراغ سبز</h2>
           <p>
-            بحث ما با یک گزارهٔ ساده آغاز می‌شود؛ همان چیزی که در «پارتو» هستهٔ مرکزی
-            نقشه را می‌سازد. فعلاً فقط همین است: یک دیسک در مرکز، بی‌هیچ حلقه‌ای پیرامونش.
+            نقشه با هستهٔ مرکزی متولد می‌شود: دیسک طلایی وسط، همان گزاره. به‌محض پیوستن
+            دو استدلال مؤید، نخستین حلقه شکل می‌گیرد. رنگ سبز یعنی تأیید و عرض هر قطاع
+            با وزن زیرشاخه‌هایش تنظیم شده است.
           </p>
-          <blockquote>«دورکاری برای تیم‌های مهندسی از حضور تمام‌وقت در دفتر اثربخش‌تر است.»</blockquote>
-          <p>
-            به‌محض اینکه دو استدلال مؤید کنارش بنشینیم، نقشه اولین حلقهٔ خود را می‌گیرد.
-            رنگ سبز یعنی تأیید؛ عرض هر قطاع هم با وزن برگ‌های زیرمجموعه تنظیم شده است.
-          </p>
+          <figure>
+            <div class="diagram" id="d1"></div>
+            <figcaption>نمودار ۱ · سه گره — گزاره و دو استدلال تأیید</figcaption>
+          </figure>
         </section>
 
-        <section data-stage="2">
-          <h2>ورود مخالفان</h2>
+        <section>
+          <h2>پردهٔ دوم — ورود مخالفان</h2>
           <p>
             هیچ گزاره‌ای جدی نیست تا وقتی کسی جدی به آن حمله نکرده باشد. با اضافه‌شدن
-            دو حملهٔ قرمز، نقشه برای نخستین‌بار «دوقطبی» می‌شود — و پاسخ‌ها روی هر حمله
-            حلقهٔ سوم را می‌سازند.
+            حملات قرمز، نقشه دوقطبی می‌شود و پاسخ به هر حمله حلقهٔ سوم را می‌سازد. روی
+            هر قطاع کلیک کنید تا داخلش زوم کنید؛ کلید <kbd>Esc</kbd> یک سطح شما را بالا
+            می‌آورد.
           </p>
-          <p>
-            حالا می‌توانید روی هر قطاع کلیک کنید تا داخل آن زوم کنید؛ دکمهٔ وسط یا کلید
-            <kbd>Esc</kbd> شما را یک سطح بالا می‌برد. این ساختار درختی است: هر پاسخ، خودش
-            یک ادعاست که قابل حمله یا تأیید دوباره.
-          </p>
+          <figure>
+            <div class="diagram" id="d2"></div>
+            <figcaption>نمودار ۲ · نه گره — حملات، پاسخ‌ها و نخستین شواهد</figcaption>
+          </figure>
         </section>
 
-        <section data-stage="3">
-          <h2>عمق واقعی: شواهد و پیامدها</h2>
+        <section>
+          <h2>پردهٔ سوم — عمق واقعی: شواهد و پیامدها</h2>
           <p>
-            در مذاکرات واقعی، هر استدلال به شواهد پایه‌ای وصل می‌شود و هر راه‌حل عملی
-            خرده‌انتقادهای خودش را دارد. با سه سطح عمق، الگوی حلقه‌ها پیچیده‌تر می‌شود؛
-            اما چیدمان شعاعی هنوز همه‌چیز را خوانا نگه می‌دارد.
+            در مذاکرات واقعی هر استدلال به شواهد پایه‌ای وصل می‌شود و هر راه‌حل عملی
+            خرده‌انتقاد خودش را دارد. با رسیدن به عمق چهار، نشانگر را روی قطاع‌ها نگه
+            دارید تا مسیر نسبتی با گزارهٔ اصلی هایلایت شود؛ برچسب روی قوس‌ها هم عنوان
+            شاخه‌های جادار را نشان می‌دهد.
           </p>
-          <p>
-            نشانگر را روی هر قطاع نگه دارید تا مسیر نسبتش با گزارهٔ اصلی هایلایت شود.
-          </p>
+          <figure>
+            <div class="diagram" id="d3"></div>
+            <figcaption>نمودار ۳ · شانزده گره — شواهد بنیادین، راهکار عملی و برچسب قوس‌ها</figcaption>
+          </figure>
         </section>
 
-        <section data-stage="4">
-          <h2>مقیاس واقعی: صدها گره، بدون آشوب</h2>
+        <section>
+          <h2>پردهٔ چهارم — همان بحث، چیدمان دیگر</h2>
+          <p>
+            داده‌ها ثابت‌اند اما موتور نمایش عوض می‌شود: چیدمان آیس‌یکل عمق را به‌جای
+            شعاع، افقی بازمی‌کند. برای متن‌های طولانی یا مقایسهٔ شاخه‌های هم‌سطح، بعضی
+            خواننده‌ها این چیدمان را ترجیح می‌دهند. فروپاشی گُوه‌های «‎+N» و منطق زوم
+            دقیقاً همان است؛ فقط هندسه فرق کرده است.
+          </p>
+          <figure>
+            <div class="diagram" id="d4"></div>
+            <figcaption>نمودار ۴ · همان شانزده گره در حالت <code dir="ltr">layoutMode: 'icicle'</code></figcaption>
+          </figure>
+        </section>
+
+        <section>
+          <h2>پردهٔ پنجم — مقیاس واقعی: صدها گره، بدون آشوب</h2>
           <p>
             مذاکرات جمعی همین‌طور رشد می‌کنند: هر کس به حرف قبلی یک پیوست اضافه می‌کند.
-            در مرحلهٔ آخر بیش از دویست گره در نقشه داریم — و بخش‌هایی از حلقه‌های بیرونی
-            که جا نشده‌اند، به‌صورت گُوه‌های «‎+N» فرومی‌ریزند. روی آن‌ها کلیک کنید تا باز شوند.
+            در نقشهٔ نهایی بیش از دویست و شصت گره داریم — و بخش‌هایی از حلقه‌های بیرونی
+            که جا نشده‌اند به‌صورت گُوه‌های «‎+N» فرومی‌ریزند. روی آن‌ها کلیک کنید تا باز
+            شوند؛ ضخامت حلقه‌ها هم بدون لغزش خوانا می‌ماند.
           </p>
-          <blockquote>
-            این همان چیزی است که «پارتو» برایش ساخته شده: نه یک اسلاید، بلکه یک فضای
-            استدلال زنده که با بحث شما بزرگ می‌شود.
-          </blockquote>
+          <figure>
+            <div class="diagram" id="d5"></div>
+            <figcaption>نمودار ۵ · بیش از ۲۶۰ گره — فروپاشی «‎+N» و چیدمان ضدلغزه</figcaption>
+          </figure>
         </section>
 
         <aside class="note">
-          در این مقاله چه دیدید؟
+          در این گزارش چه دیدید؟
           <ul>
-            <li>رشد تدریجی نقشه از یک گزاره تا بیش از ۲۰۰ گره با <code>setData</code></li>
+            <li>پنج نمودار مستقل از یک مجموعهٔ دادهٔ مشترک</li>
             <li>چیدمان شعاعی ضدلغزه با تنظیم خودکار ضخامت حلقه‌ها</li>
+            <li>موتور دوم آیس‌یکل با همان داده و همان تعامل‌ها</li>
             <li>فروریزش گُوه‌های «‎+N» برای شاخه‌های پرتعداد</li>
-            <li>زوم درختی با مسیر راهنما (breadcrumb) و جهت RTL کامل فارسی</li>
-            <li>کدگذاری شدت/اطمینان و هایلایت خط نسب</li>
+            <li>برچسب روی قوس‌ها، کدگذاری شدت/اطمینان و هایلایت خط نسب</li>
+            <li>جهت RTL کامل فارسی</li>
           </ul>
         </aside>
       </article>
     </div>
 
-    <script src="../../dist/parto.global.min.js"></script>
+    <script src="../../dist/parto.global.min.js?v=0.3.0"></script>
     <script>
       const FA_DIGITS = (n) => n.toLocaleString('fa-IR');
 
@@ -263,7 +224,7 @@
       const THESIS =
         'دورکاری برای تیم‌های مهندسی از حضور تمام‌وقت در دفتر اثربخش‌تر است';
 
-      const stage1 = [
+      const core = [
         node('t', THESIS, 'thesis', [], {
           description:
             'با حذف الزام حضور فیزیکی، تیم‌های مهندسی خروجی بالاتر و رضایت بیشتر دارند.',
@@ -271,7 +232,7 @@
           intensity: 0.85,
           confidence: 0.75,
         }),
-        node('t.s1', 'حذف رفت‌وآمد روزانه ساعت‌ها زمان مؤید برمی‌گرداند', 'support', [rel('t', 'support', 'زمان بازگشته مستقیماً به تمرکز و تولید کد صرف می‌شود.')], {
+        node('t.s1', 'حذف رفت‌وآمد روزانه ساعت‌ها زمان مؤثر برمی‌گرداند', 'support', [rel('t', 'support', 'زمان بازگشته مستقیماً به تمرکز و تولید کد صرف می‌شود.')], {
           speaker: 'مدیر محصول',
         }),
         node('t.s2', 'استخدام بدون محدودیت جغرافیایی ممکن می‌شود', 'support', [rel('t', 'support', 'استخر استعداد جهانی، کیفیت استخدام را بالا می‌برد.')], {
@@ -279,8 +240,8 @@
         }),
       ];
 
-      const stage2 = [
-        ...stage1,
+      const debate = [
+        ...core,
         node('t.x1', 'هماهنگی و انتقال دانش تیمی سخت‌تر می‌شود', 'attack', [rel('t', 'attack', 'بخش زیادی از یادگیری در گفتگوهای غیررسمی اتفاق می‌افتد.')], {
           speaker: 'معمار ارشد',
           intensity: 0.75,
@@ -301,8 +262,8 @@
         }),
       ];
 
-      const stage3 = [
-        ...stage2,
+      const dispute = [
+        ...debate,
         node('t.p1', 'مدل ترکیبی با روزهای هم‌حضوریِ ثابت', 'practical', [rel('t', 'support', 'هم‌افزایی حضوری حفظ و آزادی دورکاری نگه داشته می‌شود.')], {
           speaker: 'مدیر فنی',
           description: 'هفته‌ای دو روز هم‌رسیده‌شده (anchor days) برای کل تیم.',
@@ -320,15 +281,13 @@
         node('t.s1.x1.r1', 'حق قطع ارتباط بعد از ساعت کاری الزامی می‌شود', 'attack', [rel('t.s1.x1', 'attack', 'مشکل فرسودگی سیاست‌گذاری است نه ذات دورکاری.')]),
       ];
 
-      const STAGES = { 1: stage1, 2: stage2, 3: stage3 };
-
       const rand = ((seed) => () => {
         seed = (seed * 1664525 + 1013904223) % 4294967296;
         return seed / 4294967296;
       })(20260822);
 
-      function buildFinal() {
-        const out = [...stage3];
+      function buildDeliberation() {
+        const out = [...dispute];
         let counter = 0;
         const templates = {
           support: [
@@ -347,7 +306,6 @@
           ],
         };
         const speakers = ['عضو تیم', 'منتقد', 'کارشناس مستقل', 'مدیر ارشد', 'پژوهشگر'];
-
         const parents = ['t', 't.s1', 't.s2', 't.x1', 't.x2', 't.x1.r1', 't.x2.r1', 't.p1', 't.f1', 't.f2'];
         for (const parent of parents) {
           const fanout = 7 + Math.floor(rand() * 9);
@@ -365,7 +323,7 @@
           }
         }
 
-        const secondWaveParents = out.slice(stage3.length).map((nd) => nd.id);
+        const secondWaveParents = out.slice(dispute.length).map((nd) => nd.id);
         for (let i = 0; i < secondWaveParents.length; i += 2) {
           const parent = secondWaveParents[i];
           const sub = 1 + Math.floor(rand() * 3);
@@ -383,7 +341,7 @@
         return out;
       }
 
-      const STAGE_NODES = { 4: buildFinal() };
+      const deliberation = buildDeliberation();
 
       const labels = {
         legend: 'راهنمای رنگ‌ها',
@@ -396,68 +354,39 @@
         confidence: 'اطمینان',
       };
 
-      const breadcrumb = document.getElementById('breadcrumb');
-      const stageLabel = document.getElementById('stage-label');
-      const stageButtons = [...document.querySelectorAll('.stagebar button')];
-
-      const chart = Parto.createArgumentMap('#chart', { new_nodes: [] }, {
+      const baseOptions = {
         theme: 'auto',
         direction: 'rtl',
         lang: 'fa',
         labels,
-        ariaLabel: 'نقشه استدلال زنده دربارهٔ دورکاری',
-        onZoomChange: (path) => {
-          breadcrumb.replaceChildren();
-          path.forEach((n, i) => {
-            if (i > 0) {
-              const sep = document.createElement('span');
-              sep.className = 'breadcrumb__separator';
-              sep.textContent = '‹';
-              breadcrumb.append(sep);
-            }
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.textContent = n.title;
-            btn.dataset.relation = n.relationType ?? 'center';
-            if (i === path.length - 1) btn.setAttribute('aria-current', 'page');
-            btn.addEventListener('click', () =>
-              chart.zoomToPath(path.slice(0, i + 1).map((p) => p.id)),
-            );
-            breadcrumb.append(btn);
-          });
-        },
+      };
+
+      Parto.createArgumentMap('#d1', { new_nodes: core }, {
+        ...baseOptions,
+        ariaLabel: 'نمودار یک — گزاره و دو استدلال تأیید',
       });
 
-      let currentStage = 0;
+      Parto.createArgumentMap('#d2', { new_nodes: debate }, {
+        ...baseOptions,
+        ariaLabel: 'نمودار دو — حملات و پاسخ‌ها',
+      });
 
-      function growTo(stage) {
-        if (stage <= currentStage) return;
-        currentStage = stage;
-        const nodesArr = stage <= 3 ? STAGES[stage] : STAGE_NODES[4];
-        chart.setData({ new_nodes: nodesArr });
-        stageLabel.textContent =
-          `مرحلهٔ ${FA_DIGITS(stage)} از ${FA_DIGITS(4)} · ${FA_DIGITS(nodesArr.length)} گره`;
-        stageButtons.forEach((b) =>
-          b.setAttribute('aria-current', String(Number(b.dataset.stage) === stage)),
-        );
-      }
+      Parto.createArgumentMap('#d3', { new_nodes: dispute }, {
+        ...baseOptions,
+        arcLabels: true,
+        ariaLabel: 'نمودار سه — نقشهٔ عمیق با شواهد بنیادین',
+      });
 
-      stageButtons.forEach((b) =>
-        b.addEventListener('click', () => growTo(Number(b.dataset.stage))),
-      );
+      Parto.createArgumentMap('#d4', { new_nodes: dispute }, {
+        ...baseOptions,
+        layoutMode: 'icicle',
+        ariaLabel: 'نمودار چهار — همان داده در چیدمان آیس‌یکل',
+      });
 
-      const observer = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            if (!entry.isIntersecting) continue;
-            growTo(Number(entry.target.dataset.stage));
-          }
-        },
-        { rootMargin: '-35% 0px -35% 0px' },
-      );
-      document.querySelectorAll('section[data-stage]').forEach((el) => observer.observe(el));
-
-      growTo(1);
+      Parto.createArgumentMap('#d5', { new_nodes: deliberation }, {
+        ...baseOptions,
+        ariaLabel: 'نمودار پنج — نقشهٔ کامل با بیش از دویست گره',
+      });
     </script>
   </body>
 </html>

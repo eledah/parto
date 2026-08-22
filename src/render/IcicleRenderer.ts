@@ -196,6 +196,7 @@ export class IcicleRenderer implements MapRenderer {
       radius: this.height,
       centerCap: this.height * this.config.chart.maxCenterRadius,
       minThickness: this.height * this.config.limits.ringMinThicknessFraction,
+      aspectTolerance: this.config.spacing.sliverAspectRatio,
     });
 
     const gap = this.height * this.config.spacing.verticalGap;

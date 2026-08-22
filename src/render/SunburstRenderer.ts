@@ -253,6 +253,7 @@ export class SunburstRenderer {
             radius: this.radius,
             centerCap: this.radius * this.config.chart.maxCenterRadius,
             minThickness: this.radius * this.config.limits.ringMinThicknessFraction,
+            aspectTolerance: this.config.spacing.sliverAspectRatio,
           });
 
     const verticalGap = this.radius * this.config.spacing.verticalGap;

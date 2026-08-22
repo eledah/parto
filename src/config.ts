@@ -31,7 +31,7 @@ export interface ArgumentMapColorConfig {
 export const chartConfig = {
   colors: { ...DEFAULT_COLORS } as ArgumentMapColorConfig,
   chart: {
-    maxCenterRadius: 0.4,
+    maxCenterRadius: 0.32,
     radiusPadding: 5,
     minRadius: 10,
     cornerRadius: 3,
@@ -52,6 +52,8 @@ export const chartConfig = {
     exponentDepthThreshold: 3,
     /** Angular span (radians) below which sibling subtrees collapse into "+N" wedges. */
     minAngle: 0.045,
+    /** How many times longer than its arc a band may get before it is a sliver. */
+    sliverAspectRatio: 3,
   },
   limits: {
     /** Depth beyond which the chart auto-focuses into the heaviest branch on load. */

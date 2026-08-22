@@ -33,10 +33,11 @@ function assertNoSlivers(bands: number[], spans: number[]): void {
 }
 
 /**
- * Replicates the allocator's closed-form maximum strict-feasible extent so
- * tests can branch on feasibility exactly like the implementation does.
+ * Replicates the allocator's λ-recursion so tests can compute the unique
+ * relaxation λ* (worst uniform aspect ratio) exactly like the implementation:
+ * chainOuter(λ*) = radius. λ* <= 1 ⇔ strict feasibility at full fill.
  */
-function feasibleExtent(spansByDepth: number[], radius: number): number {
+function relaxationStar(spansByDepth: number[], radius: number): number {
   const n = spansByDepth.length - 1;
   const cap = radius * 0.32;
   const minThickness = radius * 0.015;
@@ -45,14 +46,32 @@ function feasibleExtent(spansByDepth: number[], radius: number): number {
     Math.max(radius * Math.pow(1 / (n + 1), 0.7), Math.min(minThickness, cap)),
     cap,
   );
-  let a = B1;
+  if (B1 + n * minThickness > radius) return Number.POSITIVE_INFINITY;
+  const spans: number[] = [];
   for (let d = 1; d <= n; d++) {
     const raw = spansByDepth[d] ?? 0;
-    const s = Number.isFinite(raw) && raw > 0 ? Math.min(raw, SPAN_MAX) : SPAN_MAX;
-    const x = TOLERANCE * s;
-    a *= x >= 2 ? Number.POSITIVE_INFINITY : (2 * x) / (2 - x);
+    spans.push(Number.isFinite(raw) && raw > 0 ? Math.min(raw, SPAN_MAX) : SPAN_MAX);
   }
-  return a;
+  // Floors included, mirroring the implementation's search objective.
+  const outerFloored = (lambda: number): number => {
+    let a = B1;
+    for (const s of spans) {
+      const x = lambda * TOLERANCE * s;
+      const m = x >= 2 ? Number.POSITIVE_INFINITY : (2 + x) / (2 - x);
+      a = Math.max(a * m, a + minThickness);
+    }
+    return a;
+  };
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 48 && outerFloored(hi) < radius; i++) hi *= 2;
+  if (outerFloored(hi) < radius) return Number.POSITIVE_INFINITY;
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    if (outerFloored(mid) <= radius) lo = mid;
+    else hi = mid;
+  }
+  return lo;
 }
 
 function maxRatio(bands: number[], spans: number[]): number {
@@ -101,8 +120,9 @@ describe('computeRingBoundaries', () => {
 
   it('degrades predictably on geometrically impossible inputs', () => {
     // Stacked tiny spans make strict feasibility + full fill mutually
-    // exclusive: ratios may lift uniformly by up to ~R/E, never locally
-    // explode, and the chart still fills.
+    // exclusive: every band's aspect ratio lifts by the same factor λ*
+    // (the unique relaxation closing the radius), never locally exploding,
+    // and the chart still fills.
     const random = makeRandom(7);
     for (let trial = 0; trial < 100; trial++) {
       const depthCount = 3 + Math.floor(random() * 5);
@@ -115,9 +135,19 @@ describe('computeRingBoundaries', () => {
       assertShape(bands, radius);
       expect(bands[1]).toBeLessThanOrEqual(radius * 0.33);
 
-      const f = radius / feasibleExtent(spans, radius);
-      if (Number.isFinite(f)) {
-        expect(maxRatio(bands, spans)).toBeLessThanOrEqual(TOLERANCE * f * 1.25 + 0.05);
+      const lift = relaxationStar(spans, radius);
+      if (Number.isFinite(lift)) {
+        const minThickness = radius * 0.015;
+        for (let d = 1; d < bands.length - 1; d++) {
+          const mid = (bands[d]! + bands[d + 1]!) / 2;
+          const budget = TOLERANCE * (spans[d] ?? 0) * mid;
+          // Bands sit at the relaxed cap (ratio = λ*) unless the thickness
+          // floor dominates, which only happens at sub-10px scales.
+          const allowed = Math.max(budget * lift, minThickness);
+          expect(bands[d + 1]! - bands[d]!).toBeLessThanOrEqual(
+            allowed * 1.05 + 1e-6,
+          );
+        }
       }
     }
   });
@@ -136,11 +166,11 @@ describe('computeRingBoundaries', () => {
       const radius = 120 + random() * 330;
       const bands = computeRingBoundaries(spans, { radius });
       assertShape(bands, radius);
-      if (feasibleExtent(spans, radius) >= radius) {
+      if (relaxationStar(spans, radius) <= 1) {
         assertNoSlivers(bands, spans);
       } else {
-        const f = radius / feasibleExtent(spans, radius);
-        expect(maxRatio(bands, spans)).toBeLessThanOrEqual(TOLERANCE * f * 1.25 + 0.05);
+        const lift = relaxationStar(spans, radius)!;
+        expect(maxRatio(bands, spans)).toBeLessThanOrEqual(lift * 1.05 + 0.05);
       }
     }
   });
